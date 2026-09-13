@@ -352,6 +352,7 @@ function resetPlayer() {
 function killPlayer() {
     deaths++;
     resetPlayer();
+    resetFireflies();
 }
 
 // --------------------------------------------------
@@ -397,6 +398,13 @@ function updateFireflies() {
             }
         }
     }
+}
+
+function resetFireflies() {
+    for (const firefly of fireflies) {
+        firefly.collected = false;
+    }
+    collectedFireflies = 0;
 }
 
 // --------------------------------------------------
@@ -549,7 +557,7 @@ function drawPlatforms() {
 
 function drawSpikes() {
     for (const spikeArea of spikes) {
-        const startX = spikeArea - camera.x;
+        const startX = spikeArea.x - camera.x;
 
         const spikeWidth = 20;
 
