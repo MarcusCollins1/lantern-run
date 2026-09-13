@@ -24,6 +24,8 @@ let screenShake = 0;
 let currentLevel = 1;
 let levelStartTime = performance.now();
 let completionTime = 0;
+let gameState = "levelSelect"; // "levelSelect", "playing", "complete"
+let highestUnlockedLevel = 1;
 
 // --------------------------------------------------
 // INPUT
@@ -61,21 +63,67 @@ canvas.addEventListener("click", (event) => {
     const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
     const mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
 
-    const button = {
-        x: WIDTH / 2 - 110,
-        y: 390,
-        width: 220,
-        height: 50
-    };
+    // --------------------------------------------
+    // LEVEL SELECT
+    // --------------------------------------------
 
-    if (
-        mouseX >= button.x &&
-        mouseX <= button.x + button.width &&
-        mouseY >= button.y &&
-        mouseY <= button.y + button.height
-    ) {
-        if (levels[currentLevel + 1]) {
-            loadLevel(currentLevel+1);
+    if (gameState === "levelSelect") {
+        const buttonWidth = 180;
+        const buttonHeight = 110;
+        const gap = 25;
+
+        const startX =
+            WIDTH / 2 -
+            (buttonWidth * 2 + gap) / 2;
+
+        const startY = 180;
+
+        for (let i = 0; i < 2; i++) {
+            const levelNumber = i + 1;
+
+            const x =
+                startX +
+                i * (buttonWidth + gap);
+
+            const y = startY;
+
+            const unlocked =
+                levelNumber <= highestUnlockedLevel;
+
+            if (
+                unlocked &&
+                mouseX >= x &&
+                mouseX <= x + buttonWidth &&
+                mouseY >= y &&
+                mouseY <= y + buttonHeight
+            ) {
+                loadLevel(levelNumber);
+                return;
+            }
+        }
+
+        return;
+    }
+
+    // --------------------------------------------
+    // LEVEL COMPLETE
+    // --------------------------------------------
+
+    if (gameState === "complete") {
+        const button = {
+            x: WIDTH / 2 - 110,
+            y: 390,
+            width: 220,
+            height: 50
+        };
+
+        if (
+            mouseX >= button.x &&
+            mouseX <= button.x + button.width &&
+            mouseY >= button.y &&
+            mouseY <= button.y + button.height
+        ) {
+            gameState = "levelSelect";
         }
     }
 });
@@ -343,6 +391,8 @@ function loadLevel(levelNumber) {
     respawnPoint.y = 300;
 
     levelStartTime = performance.now();
+
+    gameState = "playing";
 }
 
 // --------------------------------------------------
@@ -678,6 +728,10 @@ function updateGoal() {
     ) {
         completionTime = (performance.now() - levelStartTime) / 1000;
         levelComplete = true;
+        gameState = "complete";
+        if (currentLevel === highestUnlockedLevel) {
+            highestUnlockedLevel++;
+        }
     }
 }
 
@@ -1370,9 +1424,7 @@ function drawLevelComplete() {
     ctx.fillText(rating, WIDTH / 2, 370);
     
     // Buttons
-    const nextLevelExists = levels[currentLevel+1] !== undefined;
-    const buttonText = nextLevelExists ? "NEXT LEVEL" : "BACK TO LEVEL SELECT";
-    drawButton(WIDTH / 2 - 110, 390, 220, 50, buttonText);
+    drawButton(WIDTH / 2 - 110, 390, 220, 50, "LEVEL SELECT");
 
     ctx.textAlign = "left";
 }
@@ -1446,6 +1498,119 @@ function drawHUD() {
 }
 
 // --------------------------------------------------
+// DRAW LEVEL SELECT
+// --------------------------------------------------
+
+function drawLevelSelect() {
+    // Background
+    ctx.fillStyle = "#0b1628";
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    // Moon
+    ctx.fillStyle = "#fff0b0";
+
+    ctx.beginPath();
+    ctx.arc(
+        780,
+        90,
+        40,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    // Title
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#ffe98a";
+    ctx.font = "bold 42px Arial";
+
+    ctx.fillText(
+        "LANTERN RUN",
+        WIDTH / 2,
+        85
+    );
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "24px Arial";
+
+    ctx.fillText(
+        "SELECT LEVEL",
+        WIDTH / 2,
+        130
+    );
+
+    // Level buttons
+    const buttonWidth = 180;
+    const buttonHeight = 110;
+
+    const gap = 25;
+
+    const startX = WIDTH / 2 - (buttonWidth * 2 + gap) / 2;
+    const startY = 180;
+
+    const levelNumbers = [1, 2];
+
+    for (let i = 0; i < levelNumbers.length; i++) {
+        const levelNumber = levelNumbers[i];
+
+        const x = startX + i * (buttonWidth + gap);
+        const y = startY;
+
+        const unlocked = levelNumbers <= highestUnlockedLevel;
+
+        // Button background
+        ctx.fillStyle = unlocked ? "#34475a" : "#1b2530";
+
+        ctx.fillRect(x, y, buttonWidth, buttonHeight);
+
+        // Border
+        ctx.strokeStyle = unlocked ? "#ffe98a" : "#46515d";
+        ctx.lineWidth = 2;
+
+        ctx.strokeRect(x, y, buttonWidth, buttonHeight);
+
+        // Level number
+        ctx.fillStyle = unlocked ? "#ffffff" : "#697580";
+        ctx.font = "bold 32px Arial";
+
+        ctx.fillText(
+            `LEVEL ${levelNumber}`,
+            x + buttonWidth / 2,
+            y + 50
+        );
+
+        // Status
+        ctx.font = "16px Arial";
+
+        if (unlocked) {
+            ctx.fillText(
+                "PLAY",
+                x + buttonWidth / 2,
+                y + 82
+            );
+        } else {
+            ctx.fillText(
+                "LOCKED",
+                x + buttonWidth / 2,
+                y + 82
+            );
+
+            // Lock symbol
+            ctx.font = "22px Arial";
+
+            ctx.fillText(
+                "🔒",
+                x + buttonWidth / 2,
+                y + 105
+            );
+        }
+    }
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
 // GAME LOOP
 // --------------------------------------------------
 
@@ -1478,27 +1643,48 @@ function draw() {
         HEIGHT
     );
 
-    const shakeX = (Math.random() - 0.5) * screenShake;
-    const shakeY = (Math.random() - 0.5) * screenShake;
+    if (gameState === "levelSelect") {
+        drawLevelSelect();
+        return;
+    }
 
-    ctx.save();
-
-    ctx.translate(shakeX, shakeY);
-
-    drawBackground();
-    drawPlatforms();
-    drawSpikes();
-    drawCheckpoints();
-    drawGoal();
-    drawFireflies();
-    drawParticles();
-    drawPlayer();
+    if (gameState === "playing") {
+        const shakeX = (Math.random() - 0.5) * screenShake;
+        const shakeY = (Math.random() - 0.5) * screenShake;
     
-    ctx.restore();
+        ctx.save();
+    
+        ctx.translate(shakeX, shakeY);
+    
+        drawBackground();
+        drawPlatforms();
+        drawSpikes();
+        drawCheckpoints();
+        drawGoal();
+        drawFireflies();
+        drawParticles();
+        drawPlayer();
+        
+        ctx.restore();
+    
+        drawHUD();
+        drawDeathEffect();
+        return;
+    }
 
-    drawHUD();
-    drawLevelComplete();
-    drawDeathEffect();
+    if (gameState === "complete") {
+        drawBackground();
+        drawPlatforms();
+        drawSpikes();
+        drawCheckpoints();
+        drawGoal();
+        drawFireflies();
+        drawParticles();
+
+        drawLevelComplete();
+
+        return;
+    }
 }
 
 function gameLoop() {
@@ -1508,5 +1694,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-loadLevel(1);
+gameState = "levelSelect";
 gameLoop();
