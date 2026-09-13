@@ -22,7 +22,7 @@ let deathTimer = 0;
 const DEATH_DURATION = 40;
 let screenShake = 0;
 let currentLevel = 1;
-const levelStartTime = performance.now();
+let levelStartTime = performance.now();
 let completionTime = 0;
 
 // --------------------------------------------------
