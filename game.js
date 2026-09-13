@@ -1,3 +1,48 @@
+// --------------------------------------------------
+// FIREBASE IMPORTS
+// --------------------------------------------------
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+// --------------------------------------------------
+// FIREBASE CONFIG
+// --------------------------------------------------
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA_CXSZVz6meJgcJyktktWNmPtLmeFNXn0",
+    authDomain: "marcus-collins-github-website.firebaseapp.com",
+    projectId: "marcus-collins-github-website",
+    databaseURL: "https://marcus-collins-github-website-default-rtdb.europe-west1.firebasedatabase.app",
+    storageBucket: "marcus-collins-github-website.firebasestorage.app",
+    messagingSenderId: "328004594228",
+    appId: "1:328004594228:web:47074e07c446a328bbf861",
+    measurementId: "G-6M9HBX4E3Z"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// --------------------------------------------------
+// CANVAS
+// --------------------------------------------------
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -27,6 +72,137 @@ let completionTime = 0;
 let gameState = "title"; // "title", "levelSelect", "playing", "complete"
 let highestUnlockedLevel = 1;
 const levelResults = {};
+
+let currentUser = null;
+let isSignUpMode = false;
+
+// --------------------------------------------------
+// HTML REFERENCES
+// --------------------------------------------------
+
+const authScreen = document.getElementById("authScreen");
+const authForm = document.getElementById("authForm");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const authTitle = document.getElementById("authTitle");
+const authMessage = document.getElementById("authMessage");
+const switchAuthBtn = document.getElementById("switchAuthBtn");
+
+// --------------------------------------------------
+// SIGN-IN / SIGN-UP
+// --------------------------------------------------
+
+authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    authMessage.textContent = "Please wait...";
+
+    try {
+        if (isSignUpMode) {
+            await createUserWithEmailAndPassword(auth, email, password);
+            authMessage.textContent = "Account created!";
+        } else {
+            await signInWithEmailAndPassword(auth, email, password);
+            authMessage.textContent = "Signed in!";
+        }
+    } catch (error) {
+        console.error(error);
+
+        authMessage.textContent = getAuthErrorMessage(error);
+    }
+});
+
+switchAuthBtn.addEventListener("click", () => {
+    isSignUpMode = !isSignUpMode;
+
+    if (isSignUpMode) {
+        authTitle.textContent = "Create an account";
+        authForm.querySelector("button").textContent = "Create Account";
+        switchAuthBtn.textContent = "Already have an account? Sign in";
+    } else {
+        authTitle.textContent = "Sign in";
+        authForm.querySelector("button").textContent = "Sign In";
+        switchAuthBtn.textContent = "Create an account";
+    }
+    authMessage.textContent = "";
+});
+
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+
+    if (user) {
+        console.log("Logged in:", user.uid);
+        await loadPlayerData();
+        authScreen.style.display = "none";
+    } else {
+        console.log("No user signed in");
+
+        authScreen.style.display = "flex";
+    }
+});
+
+async function loadPlayerData() {
+    if (!currentUser) {
+        return;
+    }
+
+    const playerRef = doc(db, "lantern-run-users", currentUser.uid);
+
+    try {
+        const snapshot = await getDoc(playerRef);
+
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+
+            highestUnlockedLevel = data.highestUnlockedLevel ?? 1;
+
+            Object.assign(levelResults, data.levels ?? {});
+
+            console.log("Loaded player data:", data);
+        } else {
+            await createPlayerData();
+        }
+    } catch (error) {
+        console.error("Could not load player data:", error);
+    }
+}
+
+async function createPlayerData() {
+    if (!currentUser) {
+        return;
+    }
+
+    const playerRef = doc(db, "lantern-run-users", currentUser.uid);
+
+    const startingData = {
+        highestUnlockedLevel: 1,
+        coins: 0,
+        totalFireflies: 0,
+        levels: {},
+        upgrades: {
+            speed: 1,
+            jump: 1,
+            lantern: 1
+        }
+    };
+
+    await setDoc(playerRef, startingData);
+}
+
+// --------------------------------------------------
+// LOG OUT
+// --------------------------------------------------
+
+async function logOut() {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Sign out failed:", error);
+    }
+}
 
 // --------------------------------------------------
 // INPUT
@@ -1688,31 +1864,69 @@ function drawTitleScreen() {
 // SAVE LEVEL RESULTS
 // --------------------------------------------------
 
-function saveLevelResults() {
+async function saveLevelResult() {
+    if (!currentUser) {
+        return;
+    }
+
+    const existing =
+        levelResults[currentLevel];
+
     const result = {
-        time: completionTime,
-        fireflies: collectedFireflies,
-        totalFireflies: fireflies.length,
-        deaths: deaths
+        bestTime:
+            existing
+                ? Math.min(
+                    existing.bestTime,
+                    completionTime
+                )
+                : completionTime,
+
+        fireflies:
+            existing
+                ? Math.max(
+                    existing.fireflies,
+                    collectedFireflies
+                )
+                : collectedFireflies,
+
+        totalFireflies:
+            fireflies.length,
+
+        deaths:
+            existing
+                ? Math.min(
+                    existing.deaths,
+                    deaths
+                )
+                : deaths
     };
 
-    const previous = levelResults[currentLevel];
+    levelResults[currentLevel] =
+        result;
 
-    // First completion
-    if (!previous) {
-        levelResults[currentLevel] = result;
-        return;
-    }
+    const playerRef =
+        doc(
+            db,
+            "users",
+            currentUser.uid
+        );
 
-    // Keep the best result
-    if (
-        collectedFireflies < previous.fireflies ||
-        (collectedFireflies === previous.fireflies && deaths < previous.deaths) ||
-        (collectedFireflies === previous.fireflies && deaths === previous.deaths && completionTime < previous.time)
-    ) {
-        levelResults[currentLevel] = result;
-        return;
-    }
+    await setDoc(
+        playerRef,
+        {
+            highestUnlockedLevel,
+            levels: {
+                [currentLevel]: result
+            }
+        },
+        {
+            merge: true
+        }
+    );
+
+    console.log(
+        "Saved level progress"
+    );
 }
 
 // --------------------------------------------------
