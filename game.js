@@ -1557,7 +1557,7 @@ function drawLevelSelect() {
         const x = startX + i * (buttonWidth + gap);
         const y = startY;
 
-        const unlocked = levelNumbers <= highestUnlockedLevel;
+        const unlocked = levelNumber <= highestUnlockedLevel;
 
         // Button background
         ctx.fillStyle = unlocked ? "#34475a" : "#1b2530";
