@@ -58,22 +58,36 @@ const platforms = [
 
 const spikes = [
     {
-        x: 670,
-        y: 450,
-        width: 90,
-        height: 20
-    },
-
-    {
-        x: 1450,
+        x: 520,
         y: 450,
         width: 100,
         height: 20
     },
 
     {
-        x: 1900,
-        y: 450,
+        x: 900,
+        y: 390,
+        width: 80,
+        height: 20
+    },
+
+    {
+        x: 1280,
+        y: 330,
+        width: 80,
+        height: 20
+    },
+
+    {
+        x: 1650,
+        y: 420,
+        width: 100,
+        height: 20
+    },
+
+    {
+        x: 2100,
+        y: 360,
         width: 100,
         height: 20
     }
@@ -534,8 +548,6 @@ function drawPlatforms() {
 // --------------------------------------------------
 
 function drawSpikes() {
-    ctx.fillStyle = "#b9c5d1";
-
     for (const spikeArea of spikes) {
         const startX = spikeArea - camera.x;
 
@@ -566,7 +578,15 @@ function drawSpikes() {
             );
 
             ctx.closePath();
+
+            // Main spike
+            ctx.fillStyle = "#d7dce3";
             ctx.fill();
+
+            // Dark edge
+            ctx.strokeStyle = "#59616d";
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
     }
 }
