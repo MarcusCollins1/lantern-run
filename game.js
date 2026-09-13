@@ -54,10 +54,6 @@ window.addEventListener("keyup", (event) => {
 });
 
 canvas.addEventListener("click", (event) => {
-    if (!levelComplete) {
-        return;
-    }
-
     const rect = canvas.getBoundingClientRect();
 
     const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
