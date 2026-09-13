@@ -926,12 +926,12 @@ function updateGoal() {
         player.y + player.height > goal.y
     ) {
         completionTime = (performance.now() - levelStartTime) / 1000;
-        saveLevelResult();
-        levelComplete = true;
-        gameState = "complete";
         if (currentLevel === highestUnlockedLevel) {
             highestUnlockedLevel++;
         }
+        saveLevelResult();
+        levelComplete = true;
+        gameState = "complete";
     }
 }
 
