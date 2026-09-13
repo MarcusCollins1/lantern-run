@@ -59,7 +59,7 @@ canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
 
     const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
-    const mouseY = (event.clientY - rect.top) * (camera.height / rect.height);
+    const mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
 
     const button = {
         x: WIDTH / 2 - 110,
