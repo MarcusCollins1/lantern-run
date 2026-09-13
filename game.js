@@ -9,6 +9,13 @@ const HEIGHT = canvas.height;
 // --------------------------------------------------
 
 let jumpPressed = false;
+let collectedFireflies = 0;
+let deaths = 0;
+const respawnPoint = {
+    x: 120,
+    y: 300
+}
+let levelComplete = false;
 
 // --------------------------------------------------
 // INPUT
@@ -49,15 +56,63 @@ const platforms = [
     { x: 2450, y: 300, width: 300, height: 240 }
 ];
 
+const spikes = [
+    {
+        x: 670,
+        y: 450,
+        width: 90,
+        height: 20
+    },
+
+    {
+        x: 1450,
+        y: 450,
+        width: 100,
+        height: 20
+    },
+
+    {
+        x: 1900,
+        y: 450,
+        width: 100,
+        height: 20
+    }
+];
+
 const fireflies = [
-    { x: 350, y: 390 },
-    { x: 600, y: 330 },
-    { x: 950, y: 330 },
-    { x: 1320, y: 270 },
-    { x: 1740, y: 370 },
-    { x: 2140, y: 310 },
-    { x: 2580, y: 230 }
-]
+    { x: 350, y: 390, collected: false },
+    { x: 600, y: 330, collected: false },
+    { x: 950, y: 330, collected: false },
+    { x: 1320, y: 270, collected: false },
+    { x: 1740, y: 370, collected: false },
+    { x: 2140, y: 310, collected: false },
+    { x: 2580, y: 230, collected: false }
+];
+
+const checkpoints = [
+    {
+        x: 1260,
+        y: 290,
+        width: 24,
+        height: 60,
+        active: false
+    },
+
+    {
+        x: 2080,
+        y: 320,
+        width: 24,
+        height: 60,
+        active: false
+    }
+];
+
+const goal = {
+    x: 2650,
+    y: 220,
+    width: 55,
+    height: 80
+};
 
 // --------------------------------------------------
 // PLAYER
@@ -269,15 +324,113 @@ function updatePlayer() {
 
     // Falling off the map
     if (player.y > 700) {
-        resetPlayer();
+        killPlayer();
     }
 }
 
 function resetPlayer() {
-    player.x = 120;
-    player.y = 300;
+    player.x = respawnPoint.x;
+    player.y = respawnPoint.y;
     player.vx = 0
     player.vy = 0;
+}
+
+function killPlayer() {
+    deaths++;
+    resetPlayer();
+}
+
+// --------------------------------------------------
+// SPIKE UPDATE
+// --------------------------------------------------
+
+function updateSpikes() {
+    for (const spike of spikes) {
+        if (
+            player.x < spike.x + spike.width &&
+            player.x + player.width > spike.x &&
+            player.y < spike.y + spike.height &&
+            player.y + player.height > spike.y
+        ) {
+            killPlayer();
+            return;
+        }
+    }
+}
+
+// --------------------------------------------------
+// FIREFLY UPDATE
+// --------------------------------------------------
+
+function updateFireflies() {
+    for (const firefly of fireflies) {
+        if (firefly.collected) {
+            continue;
+        }
+
+        const dx = player.x + player.width / 2 - firefly.x;
+        const dy = player.y + player.height / 2 - firefly.y;
+
+        const distance = Math.sqrt(dx*dx + dy*dy);
+
+        if (distance < 30) {
+            firefly.collected = true;
+            collectedFireflies++;
+
+            // Collection particles
+            for (let i = 0; i < 12; i++) {
+                createParticle(firefly.x, firefly.y);
+            }
+        }
+    }
+}
+
+// --------------------------------------------------
+// CHECKPOINT UPDATE
+// --------------------------------------------------
+
+function updateCheckpoints() {
+    for (const checkpoint of checkpoints) {
+        if (checkpoint.active) {
+            continue;
+        }
+
+        if (
+            player.x < checkpoint.x + checkpoint.width &&
+            player.x + player.width > checkpoint.x &&
+            player.y < checkpoint.y + checkpoint.height &&
+            player.y + player.height > checkpoint.y
+        ) {
+            // Only one active checkpoint
+            for (const other of checkpoints) {
+                other.active = false;
+            }
+
+            checkpoint.active = true;
+
+            respawnPoint.x = checkpoint.x;
+            respawnPoint.y = checkpoint.y - player.height;
+        }
+    }
+}
+
+// --------------------------------------------------
+// GOAL UPDATE
+// --------------------------------------------------
+
+function updateGoal() {
+    if (levelComplete) {
+        return;
+    }
+
+    if (
+        player.x < goal.x + goal.width &&
+        player.x + player.width > goal.x &&
+        player.y < goal.y + goal.height &&
+        player.y + player.height > goal.y
+    ) {
+        levelComplete = true;
+    }
 }
 
 // --------------------------------------------------
@@ -293,7 +446,7 @@ function updateCamera() {
 }
 
 // --------------------------------------------------
-// BACKGROUND
+// DRAW BACKGROUND
 // --------------------------------------------------
 
 function drawBackground() {
@@ -347,7 +500,7 @@ function drawBackground() {
 }
 
 // --------------------------------------------------
-// PLATFORMS
+// DRAW PLATFORMS
 // --------------------------------------------------
 
 function drawPlatforms() {
@@ -377,14 +530,85 @@ function drawPlatforms() {
 }
 
 // --------------------------------------------------
-// FIREFLIES
+// DRAW SPIKES
+// --------------------------------------------------
+
+function drawSpikes() {
+    ctx.fillStyle = "#b9c5d1";
+
+    for (const spikeArea of spikes) {
+        const startX = spikeArea - camera.x;
+
+        const spikeWidth = 20;
+
+        const spikeCount = Math.ceil(spikeArea.width / spikeWidth);
+
+        for (let i=0; i < spikeCount; i++) {
+            const x = startX + i * spikeWidth;
+
+            const bottom = spikeArea.y + spikeArea.height;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x,
+                bottom
+            );
+
+            ctx.lineTo(
+                x + spikeWidth / 2,
+                spikeArea.y
+            );
+
+            ctx.lineTo(
+                x + spikeWidth,
+                bottom
+            );
+
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+}
+
+// --------------------------------------------------
+// DRAW FIREFLIES
 // --------------------------------------------------
 
 function drawFireflies() {
     for (const firefly of fireflies) {
+        if (firefly.collected) {
+            continue;
+        }
+
         const x = firefly.x - camera.x;
         const pulse = Math.sin(performance.now() * 0.004 + firefly.x) * 0.25 + 0.75;
 
+        // Glow
+        const glow = ctx.createRadialGradient(
+            x,
+            firefly.y,
+            2,
+            x,
+            firefly.y,
+            25
+        );
+        glow.addColorStop(0, "rgba(255, 235, 120, 0.6)");
+        glow.addColorStop(1, "rgba(255, 235, 120, 0)");
+
+        ctx.fillStyle = glow;
+
+        ctx.beginPath();
+        ctx.arc(
+            x,
+            firefly.y,
+            25,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        // Firefly
         ctx.globalAlpha = pulse;
 
         ctx.fillStyle = "#ffe98a";
@@ -397,11 +621,130 @@ function drawFireflies() {
             0,
             Math.PI * 2
         );
-
         ctx.fill();
 
         ctx.globalAlpha = 1;
     }
+}
+
+// --------------------------------------------------
+// DRAW CHECKPOINTS
+// --------------------------------------------------
+
+function drawCheckpoints() {
+    for (const checkpoint of checkpoints) {
+        const x = checkpoint.x - camera.x;
+
+        // Post
+        ctx.fillStyle = "#5b4635";
+
+        ctx.fillRect(
+            x + 9,
+            checkpoint.y + 15,
+            6,
+            45
+        );
+
+        // Lantern
+        ctx.fillStyle = checkpoint.active ? "#fff19b" : "#705f42";
+
+        ctx.fillRect(
+            x + 3,
+            checkpoint.y,
+            18,
+            22
+        );
+
+        // Glow when active
+        if (checkpoint.active) {
+            const glow = ctx.createRadialGradient(
+                x + 12,
+                checkpoint.y + 10,
+                3,
+                x + 12,
+                checkpoint.y + 10,
+                55
+            );
+            glow.addColorStop(0, "rgba(255, 230, 120, 0.5)");
+            glow.addColorStop(1, "rgba(255, 230, 120, 0)");
+
+            ctx.fillStyle = glow;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x + 12,
+                checkpoint.y + 10,
+                55,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+    }
+}
+
+// --------------------------------------------------
+// DRAW CHECKPOINTS
+// --------------------------------------------------
+
+function drawGoal() {
+    const x= goal.x - camera.x;
+
+    const pulse = Math.sin(performance.now() * 0.004) * 0.15 + 0.85;
+
+    // Glow
+    const glow = ctx.createRadialGradient(
+        x + goal.width / 2,
+        goal.y + goal.height / 2,
+        10,
+        x + goal.width / 2,
+        goal.y + goal.height / 2,
+        90
+    );
+    glow.addColorStop(0, `rgba(180, 210, 255, ${0.35 * pulse})`);
+    glow.addColorStop(1, "rgba(180, 210, 255, 0)");
+
+    ctx.fillStyle = glow;
+
+    ctx.beginPath();
+    ctx.arc(
+        x + goal.width / 2,
+        goal.y + goal.height / 2,
+        90,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill()
+
+    // Door frame
+    ctx.fillStyle = "#55677f";
+
+    ctx.fillRect(
+        x,
+        goal.y,
+        goal.width,
+        goal.height
+    );
+
+    // Door interior
+    ctx.fillStyle = "#101a2b";
+
+    ctx.fillRect(
+        x + 8,
+        goal.y + 9,
+        goal.width - 16,
+        goal.height - 9
+    );
+
+    // Symbol
+    ctx.fillStyle = "#d8e9ff";
+
+    ctx.font = "28px Arial";
+
+    ctx.fillText("✦", x + 16, goal.y + 45);
 }
 
 // --------------------------------------------------
@@ -663,13 +1006,81 @@ function drawPlayer() {
 }
 
 // --------------------------------------------------
+// DRAW LEVEL COMPLETE
+// --------------------------------------------------
+
+function drawLevelComplete() {
+    if (!levelComplete) {
+        return;
+    }
+
+    ctx.fillStyle = "rgba(5, 10, 18, 0.82)";
+
+    ctx.fillRect(
+        0,
+        0,
+        WIDTH,
+        HEIGHT
+    );
+
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#ffe98a";
+
+    ctx.font = "bold 48px Arial";
+
+    ctx.fillText("LEVEL COMPLETE", WIDTH / 2, 190);
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.font = "24px Arial";
+
+    ctx.fillText(`Fireflies: ${collectedFireflies} / ${fireflies.length}`, WIDTH / 2, 250);
+    ctx.fillText(`Deaths: ${deaths}`, WIDTH / 2, 290);
+
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#aeb9c8";
+
+    ctx.fillText("More levels coming soon...", WIDTH / 2, 355);
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
+// HUD
+// --------------------------------------------------
+
+function drawHUD() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+
+    ctx.fillRect(20, 20, 180, 50);
+
+    ctx.fillStyle = "#ffe98a";
+    ctx.font = "20px Arial";
+
+    ctx.fillText(
+        `Fireflies: ${collectedFireflies} / ${fireflies.length}`,
+        35,
+        52
+    );
+}
+
+// --------------------------------------------------
 // GAME LOOP
 // --------------------------------------------------
 
 function update() {
+    if (levelComplete) {
+        return;
+    }
+
     updatePlayer();
     updateCamera();
     updateParticles();
+    updateFireflies();
+    updateSpikes();
+    updateCheckpoints();
+    updateGoal();
 }
 
 function draw() {
@@ -682,9 +1093,14 @@ function draw() {
 
     drawBackground();
     drawPlatforms();
+    drawSpikes();
+    drawCheckpoints();
+    drawGoal();
     drawFireflies();
     drawParticles();
     drawPlayer();
+    drawHUD();
+    drawLevelComplete();
 }
 
 function gameLoop() {
