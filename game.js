@@ -193,29 +193,42 @@ function updatePlayer() {
     // Gravity
     player.vy += player.gravity;
 
-    // Horizontal movement
-    player.x += player.vx
+    // Remember where the player's feet were BEFORE moving vertically
+    const previousBottom = player.y + player.height
 
-    // Vertical movement
-    player.y = player.vy
+    // Move player
+    player.x += player.vx;
+    player.y += player.vy
+
+    const currentBottom = player.y + player.height;
 
     player.grounded = false;
 
     // Platform collision
     for (const platform of platforms) {
-        const wasAbove = player.y + player.height - player.vy <= platform.y;
+        const horizontallyOverlapping =
+            player.x + player.width > platform.x &&
+            player.x < platform.x + platform.width;
+        
+        const crossedPlatformTop =
+            previousBottom <= platform.y &&
+            currentBottom >= platform.y;
 
-        if (
-            rectangleOverlap(player, platform) &&
-            player.vy >= 0 &&
-            wasAbove
-        ) {
+        const falling = player.vy >= 0;
+
+        if (horizontallyOverlapping && crossedPlatformTop && falling) {
+            // Put player's feet exactly on the platform
             player.y = platform.y - player.height;
-            player.vy = 0
+
+            player.vy = 0;
             player.grounded = true;
             player.coyoteTimer = 8;
+
+            break;
         }
     }
+
+    // Coyote Time
 
     if (!player.grounded) {
         player.coyoteTimer --;
@@ -228,11 +241,6 @@ function updatePlayer() {
         player.animationTime += 0.05;
     }
 
-    // Falling off the map
-    if (player.y > 700) {
-        resetPlayer();
-    }
-
     // Little dust particles while running
     if (
         player.grounded &&
@@ -243,6 +251,11 @@ function updatePlayer() {
             player.x + player.width / 2,
             player.y + player.height
         );
+    }
+
+    // Falling off the map
+    if (player.y > 700) {
+        resetPlayer();
     }
 }
 
