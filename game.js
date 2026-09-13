@@ -17,6 +17,13 @@ const respawnPoint = {
 }
 const savedFirefliesIndices = [];
 let levelComplete = false;
+let isDying = false;
+let deathTimer = 0;
+const DEATH_DURATION = 40;
+let screenShake = 0;
+
+const levelStartTime = performance.now();
+let completionTime = 0;
 
 // --------------------------------------------------
 // INPUT
@@ -114,7 +121,7 @@ const checkpoints = [
     },
 
     {
-        x: 2070,
+        x: 2060,
         y: 320,
         width: 24,
         height: 60,
@@ -201,9 +208,14 @@ function updateParticles() {
 
 function drawParticles() {
     for (const p of particles) {
-        ctx.globalAlpha = p.life / 60;
+        ctx.globalAlpha = p.life / 50;
 
-        ctx.fillStyle = "#ffe58a"
+        if (p.deathParticle) {
+            ctx.fillStyle = "#e85d5d";
+        } else {
+            ctx.fillStyle = "#ffe58a";
+        }
+
 
         ctx.beginPath();
         ctx.arc(
@@ -351,8 +363,33 @@ function resetPlayer() {
 }
 
 function killPlayer() {
+    if (isDying) {
+        return;
+    }
+
     deaths++;
-    resetPlayer();
+    isDying = true;
+    deathTimer = DEATH_DURATION;
+    screenShake = 12;
+
+    // Stop movement
+    player.vx = 0;
+    player.vy = 0;
+
+    // Create a burst of particles
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: player.x + player.width / 2,
+            y: player.y + player.height / 2,
+
+            vx: (Math.random() - 0.5) * 7,
+            vy: (Math.random() - 0.5) * 7,
+
+            life: 30 + Math.random() * 20,
+
+            deathParticle: true
+        });
+    }
     resetFireflies();
 }
 
@@ -462,7 +499,39 @@ function updateGoal() {
         player.y < goal.y + goal.height &&
         player.y + player.height > goal.y
     ) {
+        completionTime = (performance.now() - levelStartTime) / 1000;
         levelComplete = true;
+    }
+}
+
+// --------------------------------------------------
+// DEATH UPDATE
+// --------------------------------------------------
+
+function updateDeath() {
+    if (!isDying) {
+        return;
+    }
+
+    deathTimer--;
+
+    if (deathTimer <= 0) {
+        isDying = false;
+        resetPlayer();
+    }
+}
+
+// --------------------------------------------------
+// SCREEN SHAKE UPDATE
+// --------------------------------------------------
+
+function updateScreenShake() {
+    if (screenShake > 0) {
+        screenShake *= 0.8;
+
+        if (screenShake < 0.1) {
+            screenShake = 0;
+        }
     }
 }
 
@@ -791,6 +860,10 @@ function drawGoal() {
 // --------------------------------------------------
 
 function drawPlayer() {
+    if (isDying) {
+        return;
+    }
+
     const screenX = player.x - camera.x;
     const screenY = player.y;
 
@@ -1045,6 +1118,36 @@ function drawPlayer() {
 }
 
 // --------------------------------------------------
+// DRAW DEATH EFFECT
+// --------------------------------------------------
+
+function drawDeathEffect() {
+    if (!isDying) {
+        return;
+    }
+
+    const progress = 1 - deathTimer / DEATH_DURATION;
+
+    ctx.fillStyle = `rgba(255, 80, 80, ${0.15 * (1-progress)})`;
+
+    ctx.fillRect(
+        0,
+        0,
+        WIDTH,
+        HEIGHT
+    );
+
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = `rgba(255, 230, 230, ${1-progress})`;
+    ctx.font = "bold 28px Arial";
+
+    ctx.fillText("OUCH!", WIDTH / 2, 140);
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
 // DRAW LEVEL COMPLETE
 // --------------------------------------------------
 
@@ -1076,6 +1179,7 @@ function drawLevelComplete() {
 
     ctx.fillText(`Fireflies: ${collectedFireflies} / ${fireflies.length}`, WIDTH / 2, 250);
     ctx.fillText(`Deaths: ${deaths}`, WIDTH / 2, 290);
+    ctx.fillText(`Time: ${completionTime.toFixed(1)} seconds`, WIDTH / 2, 330);
 
     ctx.font = "18px Arial";
     ctx.fillStyle = "#aeb9c8";
@@ -1092,7 +1196,7 @@ function drawLevelComplete() {
 function drawHUD() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
 
-    ctx.fillRect(20, 20, 180, 50);
+    ctx.fillRect(20, 20, 180, 80);
 
     ctx.fillStyle = "#ffe98a";
     ctx.font = "20px Arial";
@@ -1102,6 +1206,14 @@ function drawHUD() {
         35,
         52
     );
+
+    const currentTime = levelComplete ? completionTime : (performance.now() - levelStartTime) / 1000;
+
+    ctx.fillText(
+        `Time: ${currentTime.toFixed(1)}s`,
+        35,
+        82
+    );
 }
 
 // --------------------------------------------------
@@ -1110,6 +1222,13 @@ function drawHUD() {
 
 function update() {
     if (levelComplete) {
+        return;
+    }
+
+    if (isDying) {
+        updateDeath();
+        updateParticles();
+        updateScreenShake();
         return;
     }
 
@@ -1130,6 +1249,13 @@ function draw() {
         HEIGHT
     );
 
+    const shakeX = (Math.random() - 0.5) * screenShake;
+    const shakeY = (Math.random() - 0.5) * screenShake;
+
+    ctx.save();
+
+    ctx.translate(shakeX, shakeY);
+
     drawBackground();
     drawPlatforms();
     drawSpikes();
@@ -1138,8 +1264,12 @@ function draw() {
     drawFireflies();
     drawParticles();
     drawPlayer();
+    
+    ctx.restore();
+
     drawHUD();
     drawLevelComplete();
+    drawDeathEffect();
 }
 
 function gameLoop() {
