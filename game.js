@@ -21,7 +21,7 @@ let isDying = false;
 let deathTimer = 0;
 const DEATH_DURATION = 40;
 let screenShake = 0;
-
+let currentLevel = 1;
 const levelStartTime = performance.now();
 let completionTime = 0;
 
@@ -51,89 +51,204 @@ window.addEventListener("keyup", (event) => {
     }
 });
 
+canvas.addEventListener("click", (event) => {
+    if (!levelComplete) {
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+
+    const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const mouseY = (event.clientY - rect.top) * (camera.height / rect.height);
+
+    const button = {
+        x: WIDTH / 2 - 110,
+        y: 390,
+        width: 220,
+        height: 50
+    };
+
+    if (
+        mouseX >= button.x &&
+        mouseX <= button.x + button.width &&
+        mouseY >= button.y &&
+        mouseY <= button.y + button.height
+    ) {
+        if (levels[currentLevel + 1]) {
+            loadLevel(currentLevel+1);
+        }
+    }
+});
+
 // --------------------------------------------------
 // WORLD
 // --------------------------------------------------
 
-const platforms = [
-    { x: 0,    y: 470, width: 700, height: 70 },
-    { x: 800,  y: 410, width: 300, height: 130 },
-    { x: 1200, y: 350, width: 250, height: 190 },
-    { x: 1550, y: 440, width: 350, height: 100 },
-    { x: 2000, y: 380, width: 320, height: 160 },
-    { x: 2450, y: 300, width: 300, height: 240 }
-];
+const levels = {
+    1: {
+        platforms: [
+            { x: 0,    y: 470, width: 700, height: 70 },
+            { x: 800,  y: 410, width: 300, height: 130 },
+            { x: 1200, y: 350, width: 250, height: 190 },
+            { x: 1550, y: 440, width: 350, height: 100 },
+            { x: 2000, y: 380, width: 320, height: 160 },
+            { x: 2450, y: 300, width: 300, height: 240 }
+        ],
 
-const spikes = [
-    {
-        x: 520,
-        y: 450,
-        width: 100,
-        height: 20
+        spikes: [
+            {
+                x: 520,
+                y: 450,
+                width: 100,
+                height: 20
+            },
+            {
+                x: 900,
+                y: 390,
+                width: 80,
+                height: 20
+            },
+            {
+                x: 1280,
+                y: 330,
+                width: 80,
+                height: 20
+            },
+            {
+                x: 1650,
+                y: 420,
+                width: 100,
+                height: 20
+            },
+            {
+                x: 2100,
+                y: 360,
+                width: 100,
+                height: 20
+            }
+        ],
+
+        fireflies: [
+            { x: 350, y: 390 },
+            { x: 600, y: 330 },
+            { x: 950, y: 330 },
+            { x: 1320, y: 270 },
+            { x: 1740, y: 370 },
+            { x: 2140, y: 310 },
+            { x: 2580, y: 230 }
+        ],
+
+        checkpoints: [
+            {
+                x: 1260,
+                y: 290,
+                width: 24,
+                height: 60
+            },
+            {
+                x: 2080,
+                y: 320,
+                width: 24,
+                height: 60
+            }
+        ],
+
+        goal: {
+            x: 2650,
+            y: 220,
+            width: 55,
+            height: 80
+        }
     },
 
-    {
-        x: 900,
-        y: 390,
-        width: 80,
-        height: 20
-    },
+    2: {
+        platforms: [
+            { x: 0,    y: 470, width: 450, height: 70 },
+            { x: 560,  y: 420, width: 220, height: 120 },
+            { x: 900,  y: 350, width: 180, height: 190 },
+            { x: 1180, y: 430, width: 180, height: 110 },
+            { x: 1460, y: 330, width: 220, height: 210 },
+            { x: 1810, y: 400, width: 200, height: 140 },
+            { x: 2140, y: 300, width: 220, height: 240 },
+            { x: 2500, y: 220, width: 350, height: 320 }
+        ],
 
-    {
-        x: 1280,
-        y: 330,
-        width: 80,
-        height: 20
-    },
+        spikes: [
+            {
+                x: 300,
+                y: 450,
+                width: 80,
+                height: 20
+            },
+            {
+                x: 630,
+                y: 400,
+                width: 60,
+                height: 20
+            },
+            {
+                x: 1500,
+                y: 310,
+                width: 80,
+                height: 20
+            },
+            {
+                x: 1850,
+                y: 380,
+                width: 80,
+                height: 20
+            },
+            {
+                x: 2200,
+                y: 280,
+                width: 80,
+                height: 20
+            }
+        ],
 
-    {
-        x: 1650,
-        y: 420,
-        width: 100,
-        height: 20
-    },
+        fireflies: [
+            { x: 180, y: 390 },
+            { x: 650, y: 350 },
+            { x: 960, y: 280 },
+            { x: 1240, y: 390 },
+            { x: 1570, y: 260 },
+            { x: 1880, y: 360 },
+            { x: 2210, y: 230 },
+            { x: 2650, y: 150 }
+        ],
 
-    {
-        x: 2100,
-        y: 360,
-        width: 100,
-        height: 20
+        checkpoints: [
+            {
+                x: 1180,
+                y: 370,
+                width: 24,
+                height: 60
+            },
+            {
+                x: 2140,
+                y: 240,
+                width: 24,
+                height: 60
+            }
+        ],
+
+        goal: {
+            x: 2740,
+            y: 140,
+            width: 55,
+            height: 80
+        }
     }
-];
-
-const fireflies = [
-    { x: 350, y: 390, collected: false },
-    { x: 600, y: 330, collected: false },
-    { x: 950, y: 300, collected: false },
-    { x: 1320, y: 240, collected: false },
-    { x: 1740, y: 370, collected: false },
-    { x: 2180, y: 310, collected: false },
-    { x: 2580, y: 230, collected: false }
-];
-
-const checkpoints = [
-    {
-        x: 1240,
-        y: 290,
-        width: 24,
-        height: 60,
-        active: false
-    },
-
-    {
-        x: 2060,
-        y: 320,
-        width: 24,
-        height: 60,
-        active: false
-    }
-];
-
+};
+let platforms = [];
+let spikes = [];
+let fireflies = [];
+let checkpoints = [];
 const goal = {
-    x: 2650,
-    y: 220,
-    width: 55,
-    height: 80
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
 };
 
 // --------------------------------------------------
@@ -167,6 +282,68 @@ const player = {
 
     coyoteTimer: 0
 };
+
+// 
+// LOAD LEVEL
+// 
+
+function loadLevel(levelNumber) {
+    currentLevel = levelNumber;
+
+    const level = levels[levelNumber];
+
+    platforms.length = 0;
+    spikes.length = 0;
+    fireflies.length = 0;
+    checkpoints.length = 0;
+
+    platforms.push(
+        ...level.platforms
+    );
+
+    spikes.push(
+        ...level.spikes
+    );
+
+    for (const firefly of level.fireflies) {
+        fireflies.push({
+            ...firefly,
+            collected: false
+        });
+    }
+
+    for (const checkpoint of level.checkpoints) {
+        checkpoints.push({
+            ...checkpoint,
+            active: false
+        });
+    }
+
+    goal.x = level.goal.x;
+    goal.y = level.goal.y;
+    goal.width = level.goal.width;
+    goal.height = level.goal.height;
+
+    // Reset level state
+    levelComplete = false;
+    completionTime = 0;
+    collectedFireflies = 0;
+    deaths = 0;
+
+    isDying = false;
+
+    player.x = 120;
+    player.y = 300;
+    player.vx = 0;
+    player.vy = 0;
+
+    camera.x = 0;
+
+    respawnPoint.x = 120;
+    respawnPoint.y = 300;
+
+    levelStartTime = performance.now();
+}
 
 // --------------------------------------------------
 // CAMERA
@@ -1156,35 +1333,70 @@ function drawLevelComplete() {
         return;
     }
 
+    // Dark overlay
     ctx.fillStyle = "rgba(5, 10, 18, 0.82)";
-
-    ctx.fillRect(
-        0,
-        0,
-        WIDTH,
-        HEIGHT
-    );
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     ctx.textAlign = "center";
 
+    // Title
     ctx.fillStyle = "#ffe98a";
-
     ctx.font = "bold 48px Arial";
 
     ctx.fillText("LEVEL COMPLETE", WIDTH / 2, 190);
 
+    // Stats
     ctx.fillStyle = "#ffffff";
-
     ctx.font = "24px Arial";
 
     ctx.fillText(`Fireflies: ${collectedFireflies} / ${fireflies.length}`, WIDTH / 2, 250);
     ctx.fillText(`Deaths: ${deaths}`, WIDTH / 2, 290);
     ctx.fillText(`Time: ${completionTime.toFixed(1)} seconds`, WIDTH / 2, 330);
 
-    ctx.font = "18px Arial";
-    ctx.fillStyle = "#aeb9c8";
+    // Rating
+    let rating = "GOOD RUN!";
+    if (
+        collectedFireflies === fireflies.length &&
+        deaths === 0
+    ) {
+        rating = "PERFECT RUN!";
+    } else if (collectedFireflies === fireflies.length) {
+        rating = "COMPLETE COLLECTION!";
+    }
 
-    ctx.fillText("More levels coming soon...", WIDTH / 2, 355);
+    ctx.fillStyle = "#f4d66d";
+    ctx.font = "bold 28px Arial";
+
+    ctx.fillText(rating, WIDTH / 2, 335);
+    
+    // Buttons
+    const nextLevelExists = levels[currentLevel+1] !== undefined;
+    const buttonText = nextLevelExists ? "NEXT LEVEL" : "BACK TO LEVEL SELECT";
+    drawButton(WIDTH / 2 - 110, 390, 220, 50, buttonText);
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
+// DRAW BUTTON
+// --------------------------------------------------
+
+function drawButton(x, y, width, height, text) {
+    ctx.fillStyle = "#34475a";
+
+    ctx.fillRect(x, y, width, height);
+
+    ctx.strokeStyle = "#ffe98a";
+    ctx.lineWidth = 2;
+
+    ctx.strokeRect(x, y, width, height);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 18px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(text, x + width / 2, y + height / 2 + 6);
 
     ctx.textAlign = "left";
 }
@@ -1196,23 +1408,40 @@ function drawLevelComplete() {
 function drawHUD() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
 
-    ctx.fillRect(20, 20, 180, 80);
+    ctx.fillRect(
+        20,
+        20,
+        210,
+        100
+    );
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 18px Arial";
+
+    ctx.fillText(
+        `Level ${currentLevel}`,
+        35,
+        48
+    );
 
     ctx.fillStyle = "#ffe98a";
-    ctx.font = "20px Arial";
+    ctx.font = "18px Arial";
 
     ctx.fillText(
         `Fireflies: ${collectedFireflies} / ${fireflies.length}`,
         35,
-        52
+        75
     );
 
-    const currentTime = levelComplete ? completionTime : (performance.now() - levelStartTime) / 1000;
+    const currentTime =
+        levelComplete
+            ? completionTime
+            : (performance.now() - levelStartTime) / 1000;
 
     ctx.fillText(
         `Time: ${currentTime.toFixed(1)}s`,
         35,
-        82
+        102
     );
 }
 
@@ -1279,4 +1508,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+loadLevel(1);
 gameLoop();
