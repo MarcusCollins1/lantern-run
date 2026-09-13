@@ -5,6 +5,12 @@ const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 
 // --------------------------------------------------
+// VARIABLES
+// --------------------------------------------------
+
+let jumpPressed = false;
+
+// --------------------------------------------------
 // INPUT
 // --------------------------------------------------
 
@@ -14,6 +20,9 @@ window.addEventListener("keydown", (event) => {
     keys[event.key.toLowerCase()] = true;
 
     if (event.code === "Space") {
+        if (!keys.space) {
+            jumpPressed = true;
+        }
         keys.space = true;
         event.preventDefault();
     }
@@ -75,6 +84,9 @@ const player = {
     facing: 1,
 
     animationTime: 0,
+    animationState: "idle",
+
+    landingTimer: 0,
 
     coyoteTimer: 0
 };
@@ -182,13 +194,15 @@ function updatePlayer() {
 
     // Jump
     if (
-        keys.space &&
+        jumpPressed &&
         (player.grounded || player.coyoteTimer > 0)
     ) {
         player.vy = -player.jumpPower;
         player.grounded = false;
         player.coyoteTimer = 0;
     }
+
+    jumpPressed = false;
 
     // Gravity
     player.vy += player.gravity;
@@ -336,30 +350,258 @@ function drawBackground() {
 // PLATFORMS
 // --------------------------------------------------
 
-function drawPlatforms() {
-    for (const platform of platforms) {
-        const screenX = platform.x - camera.x;
+function drawPlayer() {
+    const screenX = player.x - camera.x;
+    const screenY = player.y;
 
-        // Dirt
-        ctx.fillStyle = "#3d2c24";
+    const moving = Math.abs(player.vx) > 0.2;
 
-        ctx.fillRect(
-            screenX,
-            platform.y,
-            platform.width,
-            platform.height
-        );
+    // --------------------------------------------
+    // DETERMINE ANIMATION STATE
+    // --------------------------------------------
 
-        // Grass
-        ctx.fillStyle = "#435c3a";
-
-        ctx.fillRect(
-            screenX,
-            platform.y,
-            platform.width,
-            12
-        );
+    if (!player.grounded) {
+        if (player.vy < 0) {
+            player.animationState = "jump";
+        } else {
+            player.animationState = "fall";
+        }
+    } else if (moving) {
+        player.animationState = "run";
+    } else {
+        player.animationState = "idle";
     }
+
+    // --------------------------------------------
+    // ANIMATION VALUES
+    // --------------------------------------------
+
+    let bodyBob = 0;
+    let legSwing = 0;
+    let armSwing = 0;
+    let bodySquash = 1;
+    let lanternSwing = 0;
+
+    // IDLE
+    if (player.animationState === "idle") {
+        bodyBob =
+            Math.sin(player.animationTime) * 1.5;
+
+        lanternSwing =
+            Math.sin(player.animationTime * 0.8) * 2;
+    }
+
+    // RUN
+    if (player.animationState === "run") {
+        legSwing =
+            Math.sin(player.animationTime) * 7;
+
+        armSwing =
+            Math.sin(player.animationTime) * 4;
+
+        bodyBob =
+            Math.abs(Math.sin(player.animationTime)) * 2;
+
+        lanternSwing =
+            Math.sin(player.animationTime + 0.5) * 4;
+    }
+
+    // JUMP
+    if (player.animationState === "jump") {
+        legSwing = 3;
+        armSwing = 7;
+        bodySquash = 0.95;
+    }
+
+    // FALL
+    if (player.animationState === "fall") {
+        legSwing = -2;
+        armSwing = 5;
+    }
+
+    // --------------------------------------------
+    // DRAW POSITION
+    // --------------------------------------------
+
+    const x = screenX;
+    const y = screenY + bodyBob;
+
+    const centerX = x + player.width / 2;
+
+    // --------------------------------------------
+    // LANTERN GLOW
+    // --------------------------------------------
+
+    const lanternX =
+        centerX - 7 + lanternSwing;
+
+    const lanternY =
+        y + 27;
+
+    const glow = ctx.createRadialGradient(
+        lanternX,
+        lanternY,
+        5,
+        lanternX,
+        lanternY,
+        80
+    );
+
+    glow.addColorStop(
+        0,
+        "rgba(255,220,110,0.28)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(255,220,110,0)"
+    );
+
+    ctx.fillStyle = glow;
+
+    ctx.beginPath();
+    ctx.arc(
+        lanternX,
+        lanternY,
+        80,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // --------------------------------------------
+    // LEGS
+    // --------------------------------------------
+
+    ctx.strokeStyle = "#24313d";
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x + 10,
+        y + 31
+    );
+
+    ctx.lineTo(
+        x + 8 + legSwing,
+        y + 44
+    );
+
+    ctx.moveTo(
+        x + 20,
+        y + 31
+    );
+
+    ctx.lineTo(
+        x + 22 - legSwing,
+        y + 44
+    );
+
+    ctx.stroke();
+
+    // --------------------------------------------
+    // BODY
+    // --------------------------------------------
+
+    const bodyHeight = 23 * bodySquash;
+
+    ctx.fillStyle = "#728ba3";
+
+    ctx.fillRect(
+        x + 6,
+        y + 12,
+        18,
+        bodyHeight
+    );
+
+    // --------------------------------------------
+    // HEAD
+    // --------------------------------------------
+
+    ctx.fillStyle = "#d8c0a0";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x + 15,
+        y + 7,
+        10,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // --------------------------------------------
+    // HOOD / HAIR
+    // --------------------------------------------
+
+    ctx.fillStyle = "#303b48";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x + 15,
+        y + 4,
+        10,
+        Math.PI,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // --------------------------------------------
+    // ARM
+    // --------------------------------------------
+
+    ctx.strokeStyle = "#d8c0a0";
+    ctx.lineWidth = 5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x + 5,
+        y + 17
+    );
+
+    ctx.lineTo(
+        x - 1 - armSwing,
+        y + 25
+    );
+
+    ctx.stroke();
+
+    // --------------------------------------------
+    // LANTERN
+    // --------------------------------------------
+
+    ctx.fillStyle = "#f7ce55";
+
+    ctx.fillRect(
+        lanternX,
+        lanternY,
+        7,
+        9
+    );
+
+    // --------------------------------------------
+    // EYE
+    // --------------------------------------------
+
+    ctx.fillStyle = "#1a1f25";
+
+    const eyeOffset =
+        player.facing === 1 ? 3 : -3;
+
+    ctx.fillRect(
+        x + 15 + eyeOffset,
+        y + 6,
+        2,
+        2
+    );
 }
 
 // --------------------------------------------------
