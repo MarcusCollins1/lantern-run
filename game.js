@@ -24,8 +24,9 @@ let screenShake = 0;
 let currentLevel = 1;
 let levelStartTime = performance.now();
 let completionTime = 0;
-let gameState = "levelSelect"; // "levelSelect", "playing", "complete"
+let gameState = "title"; // "title", "levelSelect", "playing", "complete"
 let highestUnlockedLevel = 1;
+const levelResults = {};
 
 // --------------------------------------------------
 // INPUT
@@ -58,6 +59,30 @@ canvas.addEventListener("click", (event) => {
 
     const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
     const mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+    // --------------------------------------------
+    // TITLE SCREEN
+    // --------------------------------------------
+
+    if (gameState === "title") {
+        const button = {
+            x: WIDTH / 2 - 110,
+            y: 300,
+            width: 220,
+            height: 55
+        };
+
+        if (
+            mouseX >= button.x &&
+            mouseX <= button.x + button.width &&
+            mouseY >= button.y &&
+            mouseY <= button.y + button.height
+        ) {
+            gameState = "levelSelect";
+        }
+
+        return;
+    }
 
     // --------------------------------------------
     // LEVEL SELECT
@@ -723,6 +748,7 @@ function updateGoal() {
         player.y + player.height > goal.y
     ) {
         completionTime = (performance.now() - levelStartTime) / 1000;
+        saveLevelResults();
         levelComplete = true;
         gameState = "complete";
         if (currentLevel === highestUnlockedLevel) {
@@ -1538,7 +1564,7 @@ function drawLevelSelect() {
 
     // Level buttons
     const buttonWidth = 180;
-    const buttonHeight = 110;
+    const buttonHeight = 145;
 
     const gap = 25;
 
@@ -1601,9 +1627,109 @@ function drawLevelSelect() {
                 y + 105
             );
         }
+
+        // Stars
+        const result = levelResults[levelNumber];
+        if (result) {
+            const numStars = getLevelStars(result);
+            ctx.font = "16px Arial";
+            ctx.fillText(
+                "⭐"*numStars,
+                x + buttonWidth / 2,
+                y + 120
+            )
+        }
     }
 
     ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
+// DRAW TITLE SCREEN
+// --------------------------------------------------
+
+function drawTitleScreen() {
+    ctx.fillStyle = "#0b1628";
+
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = "#ffe98a";
+    ctx.font = "bold 64px Arial";
+
+    ctx.fillText(
+        "LANTERN RUN",
+        WIDTH / 2,
+        180
+    );
+
+    ctx.fillStyle = "#b8c4d0";
+    ctx.font = "22px Arial";
+
+    ctx.fillText(
+        "A journey through the moonlit forest",
+        WIDTH / 2,
+        225
+    );
+
+    drawButton(
+        WIDTH / 2 - 110,
+        300,
+        220,
+        55,
+        "PLAY"
+    );
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
+// SAVE LEVEL RESULTS
+// --------------------------------------------------
+
+function saveLevelResults() {
+    const result = {
+        time: completionTime,
+        fireflies: collectedFireflies,
+        totalFireflies: fireflies.length,
+        deaths: deaths
+    };
+
+    const previous = levelResults[currentLevel];
+
+    // First completion
+    if (!previous) {
+        levelResults[currentLevel] = result;
+        return;
+    }
+
+    // Keep the best result
+    if (
+        collectedFireflies < previous.fireflies ||
+        (collectedFireflies === previous.fireflies && deaths < previous.deaths) ||
+        (collectedFireflies === previous.fireflies && deaths === previous.deaths && completionTime < previous.time)
+    ) {
+        levelResults[currentLevel] = result;
+        return;
+    }
+}
+
+// --------------------------------------------------
+// GET LEVEL STARS
+// --------------------------------------------------
+
+function getLevelStars(result) {
+    if (
+        result.fireflies === result.totalFireflies &&
+        result.deaths === 0
+    ) {
+        return 3;
+    }
+    if (result.fireflies >= Math.ceil(result.totalFireflies * 0.7)) {
+        return 2;
+    }
+    return 1;
 }
 
 // --------------------------------------------------
@@ -1638,6 +1764,11 @@ function draw() {
         WIDTH,
         HEIGHT
     );
+
+    if (gameState === "title") {
+        drawTitleScreen();
+        return;
+    }
 
     if (gameState === "levelSelect") {
         drawLevelSelect();
@@ -1690,5 +1821,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-gameState = "levelSelect";
+gameState = "title";
 gameLoop();
