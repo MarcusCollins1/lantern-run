@@ -1634,7 +1634,7 @@ function drawLevelSelect() {
             const numStars = getLevelStars(result);
             ctx.font = "16px Arial";
             ctx.fillText(
-                "⭐"*numStars,
+                "⭐".repeat(numStars),
                 x + buttonWidth / 2,
                 y + 120
             )
