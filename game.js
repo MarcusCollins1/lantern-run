@@ -15,6 +15,7 @@ const respawnPoint = {
     x: 120,
     y: 300
 }
+const savedFirefliesIndices = [];
 let levelComplete = false;
 
 // --------------------------------------------------
@@ -96,16 +97,16 @@ const spikes = [
 const fireflies = [
     { x: 350, y: 390, collected: false },
     { x: 600, y: 330, collected: false },
-    { x: 950, y: 330, collected: false },
-    { x: 1320, y: 270, collected: false },
+    { x: 950, y: 300, collected: false },
+    { x: 1320, y: 240, collected: false },
     { x: 1740, y: 370, collected: false },
-    { x: 2140, y: 310, collected: false },
+    { x: 2180, y: 310, collected: false },
     { x: 2580, y: 230, collected: false }
 ];
 
 const checkpoints = [
     {
-        x: 1260,
+        x: 1240,
         y: 290,
         width: 24,
         height: 60,
@@ -113,7 +114,7 @@ const checkpoints = [
     },
 
     {
-        x: 2080,
+        x: 2070,
         y: 320,
         width: 24,
         height: 60,
@@ -401,10 +402,12 @@ function updateFireflies() {
 }
 
 function resetFireflies() {
-    for (const firefly of fireflies) {
-        firefly.collected = false;
+    for (const [idx, firefly] of fireflies.entries()) {
+        if (!savedFirefliesIndices.includes(idx)) {
+            firefly.collected = false;
+        }
     }
-    collectedFireflies = 0;
+    collectedFireflies = savedFirefliesIndices.length;
 }
 
 // --------------------------------------------------
@@ -432,6 +435,14 @@ function updateCheckpoints() {
 
             respawnPoint.x = checkpoint.x;
             respawnPoint.y = checkpoint.y - player.height;
+
+            // Save fireflies
+            savedFirefliesIndices.length = 0;
+            for (const [idx, firefly] of fireflies.entries()) {
+                if (firefly.collected) {
+                    savedFirefliesIndices.push(idx);
+                }
+            }
         }
     }
 }
