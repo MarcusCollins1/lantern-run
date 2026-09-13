@@ -589,6 +589,8 @@ function loadLevel(levelNumber) {
 
     levelStartTime = performance.now();
 
+    screenShake = 0;
+
     gameState = "playing";
 }
 
@@ -1861,7 +1863,7 @@ function drawTitleScreen() {
 }
 
 // --------------------------------------------------
-// SAVE LEVEL RESULTS
+// SAVE LEVEL RESULT
 // --------------------------------------------------
 
 async function saveLevelResult() {
@@ -1873,47 +1875,25 @@ async function saveLevelResult() {
         levelResults[currentLevel];
 
     const result = {
-        bestTime:
-            existing
-                ? Math.min(
-                    existing.bestTime,
-                    completionTime
-                )
-                : completionTime,
+        time: completionTime,
+        fireflies: collectedFireflies,
+        totalFireflies: fireflies.length,
+        deaths: deaths
+    }
 
-        fireflies:
-            existing
-                ? Math.max(
-                    existing.fireflies,
-                    collectedFireflies
-                )
-                : collectedFireflies,
+    if (
+        !existing ||
+        (
+            fireflies > existing.fireflies ||
+            (fireflies === existing.fireflies && deaths < existing.deaths) ||
+            (fireflies === existing.fireflies && deaths === existing.deaths && completionTime < existing.time)
+        )
+    ) {
+        levelResults[currentLevel] = result;
 
-        totalFireflies:
-            fireflies.length,
+        const playerRef = doc(db, "lantern-run-users", currentUser.uid);
 
-        deaths:
-            existing
-                ? Math.min(
-                    existing.deaths,
-                    deaths
-                )
-                : deaths
-    };
-
-    levelResults[currentLevel] =
-        result;
-
-    const playerRef =
-        doc(
-            db,
-            "users",
-            currentUser.uid
-        );
-
-    await setDoc(
-        playerRef,
-        {
+        await setDoc(playerRef, {
             highestUnlockedLevel,
             levels: {
                 [currentLevel]: result
@@ -1924,9 +1904,10 @@ async function saveLevelResult() {
         }
     );
 
-    console.log(
-        "Saved level progress"
-    );
+    console.log("Saved level progress");
+    } else {
+        console.log("Previous attempt was better");
+    }
 }
 
 // --------------------------------------------------
