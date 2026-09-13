@@ -1367,7 +1367,7 @@ function drawLevelComplete() {
     ctx.fillStyle = "#f4d66d";
     ctx.font = "bold 28px Arial";
 
-    ctx.fillText(rating, WIDTH / 2, 335);
+    ctx.fillText(rating, WIDTH / 2, 370);
     
     // Buttons
     const nextLevelExists = levels[currentLevel+1] !== undefined;
