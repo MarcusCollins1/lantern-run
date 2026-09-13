@@ -350,6 +350,64 @@ function drawBackground() {
 // PLATFORMS
 // --------------------------------------------------
 
+function drawPlatforms() {
+    for (const platform of platforms) {
+        const screenX = platform.x - camera.x;
+
+        // Dirt
+        ctx.fillStyle = "#3d2c24";
+
+        ctx.fillRect(
+            screenX,
+            platform.y,
+            platform.width,
+            platform.height
+        );
+
+        // Grass
+        ctx.fillStyle = "#435c3a";
+
+        ctx.fillRect(
+            screenX,
+            platform.y,
+            platform.width,
+            12
+        );
+    }
+}
+
+// --------------------------------------------------
+// FIREFLIES
+// --------------------------------------------------
+
+function drawFireflies() {
+    for (const firefly of fireflies) {
+        const x = firefly.x - camera.x;
+        const pulse = Math.sin(performance.now() * 0.004 + firefly.x) * 0.25 + 0.75;
+
+        ctx.globalAlpha = pulse;
+
+        ctx.fillStyle = "#ffe98a";
+
+        ctx.beginPath();
+        ctx.arc(
+            x,
+            firefly.y,
+            5,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+    }
+}
+
+// --------------------------------------------------
+// PLAYER DRAWING / ANIMATION
+// --------------------------------------------------
+
 function drawPlayer() {
     const screenX = player.x - camera.x;
     const screenY = player.y;
@@ -595,200 +653,6 @@ function drawPlayer() {
 
     const eyeOffset =
         player.facing === 1 ? 3 : -3;
-
-    ctx.fillRect(
-        x + 15 + eyeOffset,
-        y + 6,
-        2,
-        2
-    );
-}
-
-// --------------------------------------------------
-// FIREFLIES
-// --------------------------------------------------
-
-function drawFireflies() {
-    for (const firefly of fireflies) {
-        const x = firefly.x - camera.x;
-        const pulse = Math.sin(performance.now() * 0.004 + firefly.x) * 0.25 + 0.75;
-
-        ctx.globalAlpha = pulse;
-
-        ctx.fillStyle = "#ffe98a";
-
-        ctx.beginPath();
-        ctx.arc(
-            x,
-            firefly.y,
-            5,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-        ctx.globalAlpha = 1;
-    }
-}
-
-// --------------------------------------------------
-// PLAYER DRAWING / ANIMATION
-// --------------------------------------------------
-
-function drawPlayer() {
-    const screenX = player.x - camera.x;
-    const screenY = player.y;
-    const moving = Math.abs(player.x) > 0.3;
-
-    let bob = 0;
-    let legSwing = 0;
-    let armSwing = 0;
-
-    // Idle animation
-    if (!moving && player.grounded) {
-        bob = Math.sin(player.animationTime) * 1.5;
-    }
-
-    // Walking animation
-    if (moving && player.grounded) {
-        legSwing = Math.sin(player.animationTime) * 7;
-        armSwing = Math.sin(player.animationTime) * 4;
-    }
-
-    // Jump pose
-    if (!player.grounded) {
-        legSwing = 3;
-        armSwing = 6;
-    }
-
-    const x = screenX;
-    const y = screenY + bob;
-
-    // Lantern glow
-    const glow = ctx.createRadialGradient(
-        x + player.width / 2,
-        y + 20,
-        5,
-        x + player.width / 2,
-        y + 20,
-        80
-    );
-    glow.addColorStop(0, "rgba(255, 220, 110, 0.25)");
-    glow.addColorStop(1, "rgba(255, 220, 110, 0)");
-
-    ctx.fillStyle = glow;
-
-    ctx.beginPath();
-    ctx.arc(
-        x + player.width / 2,
-        y + 20,
-        80,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    // Legs
-    ctx.strokeStyle = "#24313d";
-    ctx.lineWidth = 6;
-    ctx.lineCap = "round";
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x + 10,
-        y + 33
-    );
-
-    ctx.lineTo(
-        x + 8 + legSwing,
-        y + 44
-    );
-
-    ctx.moveTo(
-        x + 20,
-        y + 33
-    );
-
-    ctx.lineTo(
-        x + 22 - legSwing,
-        y + 44
-    );
-
-    ctx.stroke();
-
-    // Body
-    ctx.fillStyle = "#728ba3"
-
-    ctx.fillRect(
-        x + 6,
-        y + 12,
-        18,
-        23
-    );
-
-    // Head
-    ctx.fillStyle = "#d8c0a0";
-
-    ctx.beginPath();
-    ctx.arc(
-        x + 15,
-        y + 8,
-        10,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    // Hair / hood
-    ctx.fillStyle = "#303b48";
-
-    ctx.beginPath();
-    ctx.arc(
-        x + 15,
-        y + 5,
-        10,
-        Math.PI,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    // Arm
-    ctx.strokeStyle = "#d8c0a0";
-    ctx.lineWidth = 5;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x + 5,
-        y + 16
-    );
-
-    ctx.lineTo(
-        x - 1 - armSwing,
-        y + 25
-    );
-
-    ctx.stroke();
-
-    // Lantern
-    ctx.fillStyle = "#f7ce55";
-
-    ctx.fillRect(
-        x - 8,
-        y + 23,
-        7,
-        9
-    );
-
-    // Eye
-    ctx.fillStyle = "#1a1f25";
-
-    const eyeOffset = player.facing === 1 ? 3 : -3;
 
     ctx.fillRect(
         x + 15 + eyeOffset,
