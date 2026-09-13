@@ -110,3 +110,22 @@ canvas {
     color: #ffe98a;
     font-size: 14px;
 }
+
+.account-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.account-bar button {
+    padding: 6px 12px;
+    border: 1px solid #55677f;
+    background: #182436;
+    color: #aeb9c8;
+    cursor: pointer;
+}
+
+.account-bar button:hover {
+    background: #25364c;
+    color: #ffffff;
+}
