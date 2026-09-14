@@ -1235,7 +1235,7 @@ function drawGrid() {
 
     const firstGridX = Math.floor(cameraX / gridSize) * gridSize;
 
-    for (let worldX = firstGridX; worldX <= levelCanvas.width; worldX += gridSize) {
+    for (let worldX = firstGridX; worldX <= cameraX + levelCanvas.width; worldX += gridSize) {
         const screenX = worldX - cameraX;
 
         if (worldX === 0) {
