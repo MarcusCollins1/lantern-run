@@ -512,12 +512,12 @@ function updatePlayer() {
 function resetPlayer() {
     const hasActiveCheckpoint = checkpoints.some(cp => cp.active);
     if (hasActiveCheckpoint) {
-        loadLevel(currentLevel);
-    } else {
         player.x = respawnPoint.x;
         player.y = respawnPoint.y;
         player.vx = 0
         player.vy = 0;
+    } else {
+        loadLevel(currentLevel);
     }
 }
 
