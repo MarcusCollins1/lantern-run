@@ -510,10 +510,15 @@ function updatePlayer() {
 }
 
 function resetPlayer() {
-    player.x = respawnPoint.x;
-    player.y = respawnPoint.y;
-    player.vx = 0
-    player.vy = 0;
+    const hasActiveCheckpoint = checkpoints.some(cp => cp.active);
+    if (hasActiveCheckpoint) {
+        loadLevel(currentLevel);
+    } else {
+        player.x = respawnPoint.x;
+        player.y = respawnPoint.y;
+        player.vx = 0
+        player.vy = 0;
+    }
 }
 
 function killPlayer() {
@@ -617,11 +622,6 @@ function updateCheckpoints() {
             player.y < checkpoint.y + checkpoint.height &&
             player.y + player.height > checkpoint.y
         ) {
-            // Only one active checkpoint
-            for (const other of checkpoints) {
-                other.active = false;
-            }
-
             checkpoint.active = true;
 
             respawnPoint.x = checkpoint.x;
