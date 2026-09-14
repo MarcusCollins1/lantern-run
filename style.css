@@ -143,8 +143,8 @@ canvas {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 8px;
+    gap: 12px;
 }
-
 .account-bar button {
     padding: 6px 12px;
     border: 1px solid #55677f;
@@ -152,8 +152,20 @@ canvas {
     color: #aeb9c8;
     cursor: pointer;
 }
-
 .account-bar button:hover {
     background: #25364c;
     color: #ffffff;
+}
+
+#adminBtn {
+    background: #053e92;
+    color: #ca9aaf;
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+#adminBtn:hover {
+    background: #05925e;
+    color: #dfc684;
+
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(235, 33, 198, 0.35);
 }
