@@ -396,10 +396,10 @@ function handlePointerDown(position) {{
 
 
 // ==================================================
-// POINTER DOWN LOGIC
+// POINTER MOVE LOGIC
 // ==================================================
 
-function handlePointerDown(position) {
+function handlePointerMove(position) {
 
     if(currentTool === TOOLS && dragState) {
         const object = dragState.object;
