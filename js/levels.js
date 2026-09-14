@@ -163,7 +163,7 @@ export const levels = {
         "platforms": [
             {
                 "x": 43,
-                "y": 340,
+                "y": 360,
                 "width": 240,
                 "height": 200
             },
