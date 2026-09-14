@@ -53,6 +53,7 @@ let gameState = "title";
 let highestUnlockedLevel = 1;
 const levelResults = {};
 
+// --------------------------------------------------
 // INPUT
 // --------------------------------------------------
 
@@ -148,6 +149,48 @@ canvas.addEventListener("click", (event) => {
         }
 
         return;
+    }
+
+    // --------------------------------------------
+    // PLAYING
+    // --------------------------------------------
+
+    if (gameState === "playing") {
+        // Restart Button
+        const restartButton = {
+            x: WIDTH - 240,
+            y: 20,
+            width: 100,
+            height: 40
+        };
+
+        if (
+            mouseX >= restartButton.x &&
+            mouseX <= restartButton.x + restartButton.width &&
+            mouseY >= restartButton.y &&
+            mouseY <= restartButton.y + restartButton.height
+        ) {
+            loadLevel(currentLevel);
+            return;
+        }
+
+        // Level Select Button
+        const levelSelectButton = {
+            x: WIDTH - 130,
+            y: 20,
+            width: 110,
+            height: 40
+        };
+
+        if (
+            mouseX >= levelSelectButton.x &&
+            mouseX <= levelSelectButton.x + levelSelectButton.width &&
+            mouseY >= levelSelectButton.y &&
+            mouseY <= levelSelectButton.y + levelSelectButton.height
+        ) {
+            gameState = "levelSelect";
+            return;
+        }
     }
 
     // --------------------------------------------
@@ -1338,6 +1381,34 @@ function drawButton(x, y, width, height, text) {
     ctx.textAlign = "left";
 }
 
+function drawSmallButton(x, y, width, height, text) {
+    ctx.fillStyle = "rgba(20, 30, 42, 0.85)";
+
+    ctx.fillRect(x, y, width, height);
+
+    ctx.strokeStyle = "#718096";
+    ctx.lineWidth = 1;
+
+    ctx.strokeRect(x, y, width, height);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 13px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(text, x + width / 2, y + height / 2 + 5);
+
+    ctx.textAlign = "left";
+}
+
+// --------------------------------------------------
+// DRAW GAME BUTTONS
+// --------------------------------------------------
+
+function drawGameButtons() {
+    drawSmallButton(WIDTH - 240, 20, 100, 40, "RESTART");
+    drawSmallButton(WIDTH - 130, 20, 110, 40, "LEVEL SELECT");
+}
+
 // --------------------------------------------------
 // HUD
 // --------------------------------------------------
@@ -1659,6 +1730,7 @@ function draw() {
         ctx.restore();
     
         drawHUD();
+        drawGameButtons();
         drawDeathEffect();
         return;
     }
