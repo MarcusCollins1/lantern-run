@@ -1616,7 +1616,7 @@ function getButtonsForState() {
 
         const levelNumbers = Object.keys(levels).map(Number).sort((a, b) => a-b);
 
-        const columns = 2;
+        const columns = 4;
         const rows = Math.ceil(levelNumbers.length / columns);
 
         const totalWidth = columns * buttonWidth + (columns - 1) * gap;
