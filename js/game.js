@@ -1587,6 +1587,21 @@ function getButtonsForState() {
     }
 
     if (gameState === "levelSelect") {
+        const levelSelectButtons = [];
+
+        // Return button
+        const returnButton = createButton(
+            "level-select-return-button",
+            20,
+            20,
+            150,
+            50,
+            "← Return",
+            () => {gameState = "title";}
+        );
+        levelSelectButtons.push(returnButton);
+
+        // Level Numbers Buttons
         const buttonWidth = 180;
         const buttonHeight = 145;
         const gap = 25;
@@ -1602,7 +1617,7 @@ function getButtonsForState() {
         const startX = WIDTH / 2 - totalWidth / 2;
         const startY = 180;
 
-        return levelNumbers.map((levelNumber, index) => {
+        const levelNumbersButtons = levelNumbers.map((levelNumber, index) => {
             const column = index % columns;
             const row = Math.floor(index / columns);
 
@@ -1630,6 +1645,8 @@ function getButtonsForState() {
                 }
             );
         });
+
+        return levelSelectButtons.concat(levelNumbersButtons);
     }
     
     if (gameState === "playing") {
