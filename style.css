@@ -27,6 +27,12 @@ h1 {
 }
 
 .return-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+
+    padding: 10px 16px;
+
     background: lightblue;
     color: hotpink;
     font-size: large;
