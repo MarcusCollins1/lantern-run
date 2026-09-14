@@ -7,6 +7,7 @@ import {
 import { auth } from "./firebase.js";
 
 import { levels } from "./levels.js";
+import { cursorTo } from "node:readline";
 
 // ==================================================
 // DOM
@@ -451,7 +452,7 @@ function handlePointerUp(position) {
             const rectangle = normalizeRectangle(drawingStart.x, drawingStart.y, position.x, position.y);
 
             if (rectangle.width >= 10 && rectangle.height >= 5) {
-                if (currentLevel === TOOLS.PLATFORM) {
+                if (currentTool === TOOLS.PLATFORM) {
                     currentLevel.platforms.push(rectangle);
                 } else {
                     currentLevel.spikes.push(rectangle);
