@@ -1594,8 +1594,8 @@ function getButtonsForState() {
             "level-select-return-button",
             20,
             20,
-            150,
-            50,
+            100,
+            30,
             "← Return",
             () => {gameState = "title";}
         );

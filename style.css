@@ -26,6 +26,28 @@ h1 {
     font-size: 32px;
 }
 
+.return-button {
+    background: lightblue;
+    color: hotpink;
+    font-size: large;
+    font-weight: bold;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin: 4px;
+    cursor: pointer;
+
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.return-button:hover {
+    background: hotpink;
+    color: lightblue;
+
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(139, 92, 246, 0.35);
+}
+
 .game-wrapper {
     border: 3px solid #d9b44a;
     box-shadow: 
