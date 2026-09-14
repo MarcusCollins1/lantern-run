@@ -368,6 +368,7 @@ levelCanvas.addEventListener("pointerdown", (event) => {
     }
 
     if (event.button === 1) {
+        event.preventDefault();
         startPanning(event);
 
         return;
@@ -1232,12 +1233,24 @@ function drawGrid() {
     ctx.strokeStyle = "rgba(160, 180, 210, 0.12)";
     ctx.lineWidth = 1;
 
-    for (let x = 0; x <= levelCanvas.width; x += gridSize) {
+    const firstGridX = Math.floor(cameraX / gridSize) * gridSize;
+
+    for (let worldX = firstGridX; worldX <= levelCanvas.width; worldX += gridSize) {
+        const screenX = worldX - cameraX;
+
+        if (worldX === 0) {
+            ctx.strokeStyle = "rgba(255, 233, 138, 0.35)";
+            ctx.lineWidth = 2;
+        } else {
+            ctx.strokeStyle = "rgba(160, 180, 210, 0.12)"
+            ctx.lineWidth = 1;
+        }
+
         ctx.beginPath();
 
-        ctx.moveTo(x, 0);
+        ctx.moveTo(screenX, 0);
 
-        ctx.lineTo(x, levelCanvas.height);
+        ctx.lineTo(screenX, levelCanvas.height);
 
         ctx.stroke();
     }
