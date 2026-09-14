@@ -52,6 +52,9 @@ let completionTime = 0;
 let gameState = "title";
 let highestUnlockedLevel = 1;
 const levelResults = {};
+const buttons = [];
+let mousePosition = { x: 0, y: 0 };
+let buttonsState = null;
 
 // --------------------------------------------------
 // INPUT
@@ -85,136 +88,27 @@ canvas.addEventListener("click", (event) => {
     const mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
     const mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
 
-    // --------------------------------------------
-    // TITLE SCREEN
-    // --------------------------------------------
-
-    if (gameState === "title") {
-        const button = {
-            x: WIDTH / 2 - 110,
-            y: 300,
-            width: 220,
-            height: 55
-        };
-
-        if (
-            mouseX >= button.x &&
-            mouseX <= button.x + button.width &&
-            mouseY >= button.y &&
-            mouseY <= button.y + button.height
-        ) {
-            gameState = "levelSelect";
-        }
-
-        return;
-    }
-
-    // --------------------------------------------
-    // LEVEL SELECT
-    // --------------------------------------------
-
-    if (gameState === "levelSelect") {
-        const buttonWidth = 180;
-        const buttonHeight = 110;
-        const gap = 25;
-
-        const startX =
-            WIDTH / 2 -
-            (buttonWidth * 2 + gap) / 2;
-
-        const startY = 180;
-
-        for (let i = 0; i < 2; i++) {
-            const levelNumber = i + 1;
-
-            const x =
-                startX +
-                i * (buttonWidth + gap);
-
-            const y = startY;
-
-            const unlocked =
-                levelNumber <= highestUnlockedLevel;
-
-            if (
-                unlocked &&
-                mouseX >= x &&
-                mouseX <= x + buttonWidth &&
-                mouseY >= y &&
-                mouseY <= y + buttonHeight
-            ) {
-                loadLevel(levelNumber);
-                return;
-            }
-        }
-
-        return;
-    }
-
-    // --------------------------------------------
-    // PLAYING
-    // --------------------------------------------
-
-    if (gameState === "playing") {
-        // Restart Button
-        const restartButton = {
-            x: WIDTH - 240,
-            y: 20,
-            width: 100,
-            height: 40
-        };
-
-        if (
-            mouseX >= restartButton.x &&
-            mouseX <= restartButton.x + restartButton.width &&
-            mouseY >= restartButton.y &&
-            mouseY <= restartButton.y + restartButton.height
-        ) {
-            loadLevel(currentLevel);
-            return;
-        }
-
-        // Level Select Button
-        const levelSelectButton = {
-            x: WIDTH - 130,
-            y: 20,
-            width: 110,
-            height: 40
-        };
-
-        if (
-            mouseX >= levelSelectButton.x &&
-            mouseX <= levelSelectButton.x + levelSelectButton.width &&
-            mouseY >= levelSelectButton.y &&
-            mouseY <= levelSelectButton.y + levelSelectButton.height
-        ) {
-            gameState = "levelSelect";
-            return;
-        }
-    }
-
-    // --------------------------------------------
-    // LEVEL COMPLETE
-    // --------------------------------------------
-
-    if (gameState === "complete") {
-        const button = {
-            x: WIDTH / 2 - 110,
-            y: 390,
-            width: 220,
-            height: 50
-        };
-
-        if (
-            mouseX >= button.x &&
-            mouseX <= button.x + button.width &&
-            mouseY >= button.y &&
-            mouseY <= button.y + button.height
-        ) {
-            gameState = "levelSelect";
-        }
-    }
+    handleButtonClick(mouseX, mouseY);
 });
+
+canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+
+    mousePosition.x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    mousePosition.y = (event.clientY - rect.top) * (canvas.height / rect.height);
+})
+
+function handleButtonClick(x, y) {
+    for (let i = buttons.length -1; i >= 0; i--) {
+        const button = buttons[i];
+        if (button.containsPoint(x, y)) {
+            button.click();
+            updateButtons();
+            return true;
+        }
+    }
+    return false;
+}
 
 // --------------------------------------------------
 // WORLD
@@ -692,6 +586,19 @@ function updateScreenShake() {
             screenShake = 0;
         }
     }
+}
+
+// --------------------------------------------------
+// UPDATE BUTTONS
+// --------------------------------------------------
+
+function updateButtons() {
+    if (buttonsState === gameState) {
+        return;
+    }
+
+    setButtons(getButtonsForState());
+    buttonsState = gameState;
 }
 
 // --------------------------------------------------
@@ -1350,52 +1257,6 @@ function drawLevelComplete() {
     ctx.font = "bold 28px Arial";
 
     ctx.fillText(rating, WIDTH / 2, 370);
-    
-    // Buttons
-    drawButton(WIDTH / 2 - 110, 390, 220, 50, "LEVEL SELECT");
-
-    ctx.textAlign = "left";
-}
-
-// --------------------------------------------------
-// DRAW BUTTON
-// --------------------------------------------------
-
-function drawButton(x, y, width, height, text) {
-    ctx.fillStyle = "#34475a";
-
-    ctx.fillRect(x, y, width, height);
-
-    ctx.strokeStyle = "#ffe98a";
-    ctx.lineWidth = 2;
-
-    ctx.strokeRect(x, y, width, height);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 18px Arial";
-
-    ctx.textAlign = "center";
-
-    ctx.fillText(text, x + width / 2, y + height / 2 + 6);
-
-    ctx.textAlign = "left";
-}
-
-function drawSmallButton(x, y, width, height, text) {
-    ctx.fillStyle = "rgba(20, 30, 42, 0.85)";
-
-    ctx.fillRect(x, y, width, height);
-
-    ctx.strokeStyle = "#718096";
-    ctx.lineWidth = 1;
-
-    ctx.strokeRect(x, y, width, height);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 13px Arial";
-    ctx.textAlign = "center";
-
-    ctx.fillText(text, x + width / 2, y + height / 2 + 5);
 
     ctx.textAlign = "left";
 }
@@ -1405,8 +1266,107 @@ function drawSmallButton(x, y, width, height, text) {
 // --------------------------------------------------
 
 function drawGameButtons() {
-    drawSmallButton(WIDTH - 240, 20, 100, 40, "RESTART");
-    drawSmallButton(WIDTH - 130, 20, 110, 40, "LEVEL SELECT");
+    for (const button of buttons) {
+        drawGameButton(button);
+    }
+}
+
+function drawGameButton(button) {
+    const hovered = button.containsPoint(mousePosition.x, mousePosition.y);
+
+    if (button.disabled) {
+        if (button.style === "level") {
+            ctx.fillStyle = "#1b2530";
+            ctx.strokeStyle = "#46515d";
+        } else {
+            ctx.fillStyle = "#222b35";
+            ctx.strokeStyle = "#46515d";
+        }
+    } else if (hovered) {
+        if (button.style === "large") {
+            ctx.fillStyle = "#435a70";
+            ctx.strokeStyle = "#fff4ad";
+        } else if (button.style === "level") {
+            ctx.fillStyle = "#435a70";
+            ctx.strokeStyle = "#fff4ad";
+        } else {
+            ctx.fillStyle = "#25364c";
+            ctx.strokeStyle = "#ffe98a";
+        }
+    } else {
+        if (button.style === "large") {
+            ctx.fillStyle = "#34475a";
+            ctx.strokeStyle = "#ffe98a";
+        } else if (button.style === "level") {
+            ctx.fillStyle = "#34475a";
+            ctx.strokeStyle = "#ffe98a";
+        } else {
+            ctx.fillStyle = "rgba(20, 30, 42, 0.85)";
+            ctx.strokeStyle = "#718096";
+        }
+    }
+
+    const borderWidth = button.style === "small" ? 1 : 2;
+
+    ctx.lineWidth = borderWidth;
+
+    ctx.fillRect(button.x, button.y, button.width, button.height);
+
+    ctx.strokeRect(button.x, button.y, button.width, button.height);
+
+    if (button.style === "level") {
+        drawLevelButtonContent(button);
+        return;
+    }
+
+    ctx.fillStyle = button.disabled ? "#697580" : "#ffffff";
+    ctx.font = button.style === "large" ? "bold 18px Arial" : "bold 13px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        button.text,
+        button.x + button.width / 2,
+        button.y + button.height / 2 + (button.style === "large" ? 6 : 5)
+    );
+
+    ctx.textAlign = "left";
+}
+
+function drawLevelButtonContent(button) {
+    const levelNumber = button.data.levelNumber;
+    const unlocked = button.data.unlocked;
+    const stars = button.data.stars;
+    const centerX = button.x + button.width / 2;
+    ctx.textAlign = "center";
+
+    // Level number
+    ctx.fillStyle = unlocked ? "#ffffff" : "#697580";
+    ctx.font = "bold 32px Arial";
+
+    ctx.fillText(`LEVEL ${levelNumber}`, centerX, button.y + 50);
+
+    // Status
+    ctx.font = "16px Arial";
+
+    if (unlocked) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("PLAY", centerX, button.y + 82);
+    } else {
+        ctx.fillStyle = "#697580";
+        ctx.fillText("LOCKED", centerX, button.y + 82);
+
+        ctx.font = "22px Arial";
+        ctx.fillText("🔒", centerX, button.y + 105);
+    }
+
+    // Stars
+    if (stars > 0) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px Arial";
+        ctx.fillText("⭐".repeat(stars), centerX, button.y + 120);
+    }
+    
+    ctx.textAlign = "left";
 }
 
 // --------------------------------------------------
@@ -1496,85 +1456,6 @@ function drawLevelSelect() {
         130
     );
 
-    // Level buttons
-    const buttonWidth = 180;
-    const buttonHeight = 145;
-
-    const gap = 25;
-
-    const startX = WIDTH / 2 - (buttonWidth * 2 + gap) / 2;
-    const startY = 180;
-
-    const levelNumbers = [1, 2];
-
-    for (let i = 0; i < levelNumbers.length; i++) {
-        const levelNumber = levelNumbers[i];
-
-        const x = startX + i * (buttonWidth + gap);
-        const y = startY;
-
-        const unlocked = levelNumber <= highestUnlockedLevel;
-
-        // Button background
-        ctx.fillStyle = unlocked ? "#34475a" : "#1b2530";
-
-        ctx.fillRect(x, y, buttonWidth, buttonHeight);
-
-        // Border
-        ctx.strokeStyle = unlocked ? "#ffe98a" : "#46515d";
-        ctx.lineWidth = 2;
-
-        ctx.strokeRect(x, y, buttonWidth, buttonHeight);
-
-        // Level number
-        ctx.fillStyle = unlocked ? "#ffffff" : "#697580";
-        ctx.font = "bold 32px Arial";
-
-        ctx.fillText(
-            `LEVEL ${levelNumber}`,
-            x + buttonWidth / 2,
-            y + 50
-        );
-
-        // Status
-        ctx.font = "16px Arial";
-
-        if (unlocked) {
-            ctx.fillText(
-                "PLAY",
-                x + buttonWidth / 2,
-                y + 82
-            );
-        } else {
-            ctx.fillText(
-                "LOCKED",
-                x + buttonWidth / 2,
-                y + 82
-            );
-
-            // Lock symbol
-            ctx.font = "22px Arial";
-
-            ctx.fillText(
-                "🔒",
-                x + buttonWidth / 2,
-                y + 105
-            );
-        }
-
-        // Stars
-        const result = levelResults[levelNumber];
-        if (result) {
-            const numStars = getLevelStars(result);
-            ctx.font = "16px Arial";
-            ctx.fillText(
-                "⭐".repeat(numStars),
-                x + buttonWidth / 2,
-                y + 120
-            )
-        }
-    }
-
     ctx.textAlign = "left";
 }
 
@@ -1605,14 +1486,6 @@ function drawTitleScreen() {
         "A journey through the moonlit forest",
         WIDTH / 2,
         225
-    );
-
-    drawButton(
-        WIDTH / 2 - 110,
-        300,
-        220,
-        55,
-        "PLAY"
     );
 
     ctx.textAlign = "left";
@@ -1668,10 +1541,153 @@ function getLevelStars(result) {
 }
 
 // --------------------------------------------------
+// CREATE BUTTON
+// --------------------------------------------------
+
+function createButton(id, x, y, width, height, text = "", onClick = null, disable = false, style = "small", data = {}) {
+    return {id, x, y, width, height, text, onClick, disable, style, data,
+        containsPoint(px, py) {
+            return(
+                px >= this.x &&
+                px <= this.x + this.width &&
+                py >= this.y &&
+                py <= this.y + this.height
+            );
+        },
+        click() {
+            if (!this.disable && typeof this.onClick === "function") {
+                this.onClick();
+            }
+        }
+    };
+}
+
+function setButtons(newButtons) {
+    buttons.length = 0;
+    buttons.push(...newButtons);
+}
+
+function getButtonsForState() {
+    if (gameState === "title") {
+        return [
+            createButton(
+                "play",
+                WIDTH / 2 - 110,
+                300,
+                220,
+                55,
+                "PLAY",
+                () => {
+                    gameState = "levelSelect";
+                },
+                false,
+                "large"
+            )
+        ];
+    }
+
+    if (gameState === "levelSelect") {
+        const buttonWidth = 180;
+        const buttonHeight = 145;
+        const gap = 25;
+
+        const levelNumbers = Object.keys(levels).map(Number).sort((a, b) => a-b);
+
+        const columns = 2;
+        const rows = Math.ceil(levelNumbers.length / columns);
+
+        const totalWidth = columns * buttonWidth + (columns - 1) * gap;
+        const totalHeight = rows * buttonHeight + (rows - 1) * gap;
+
+        const startX = WIDTH / 2 - totalWidth / 2;
+        const startY = 180;
+
+        return levelNumbers.map((levelNumber, index) => {
+            const column = index % columns;
+            const row = Math.floor(index / columns);
+
+            const x = startX + column * (buttonHeight + gap);
+            const y = startY + row * (buttonWidth + gap);
+
+            const unlocked = levelNumber <= highestUnlockedLevel;
+            const result = levelResults[levelNumber];
+            const stars = result ? getLevelStars(result) : 0;
+
+            return createButton({
+                id: `level-${levelNumber}`,
+                x,
+                y,
+
+                width: buttonWidth,
+                height: buttonHeight,
+                text: `LEVEL ${levelNumber}`,
+                disabled: !unlocked,
+                style: "level",
+                data: {
+                    levelNumber,
+                    unlocked,
+                    stars
+                },
+                onClick() {
+                    loadLevel(levelNumber);
+                }
+            });
+        });
+    }
+    
+    if (gameState === "playing") {
+        return [
+            createButton(
+                "restart",
+                WIDTH - 240,
+                20,
+                100,
+                40,
+                "RESTART",
+                () => loadLevel(currentLevel)
+            ),
+
+            createButton(
+                "level-select",
+                WIDTH - 130,
+                20,
+                110,
+                40,
+                "LEVEL SELECT",
+                () => {
+                    gameState = "levelSelect";
+                }
+            )
+        ];
+    }
+
+    if (gameState === "complete") {
+        return [
+            createButton({
+                id: "complete-level-select",
+                x: WIDTH / 2 - 110,
+                y: 390,
+                width: 220,
+                height: 50,
+                text: "LEVEL SELECT",
+                style: "large",
+                onClick() {
+                    gameState = "levelSelect";
+                }
+            })
+        ];
+    }
+
+    return [];
+}
+
+// --------------------------------------------------
 // GAME LOOP
 // --------------------------------------------------
 
 function update() {
+    updateButtons();
+
     if (levelComplete) {
         return;
     }
@@ -1699,6 +1715,8 @@ function draw() {
         WIDTH,
         HEIGHT
     );
+
+    drawGameButtons();
 
     if (gameState === "title") {
         drawTitleScreen();
@@ -1759,5 +1777,7 @@ function gameLoop() {
 
 export function startGame() {
     gameState = "title";
+    buttonsState = null;
+    updateButtons();
     gameLoop();
 }
