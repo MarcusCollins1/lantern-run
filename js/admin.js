@@ -7,7 +7,6 @@ import {
 import { auth } from "./firebase.js";
 
 import { levels } from "./levels.js";
-import { cursorTo } from "node:readline";
 
 // ==================================================
 // DOM
