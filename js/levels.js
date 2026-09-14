@@ -157,5 +157,75 @@ export const levels = {
             width: 55,
             height: 80
         }
+    },
+
+    3: {
+        "platforms": [
+            {
+                "x": 43,
+                "y": 340,
+                "width": 240,
+                "height": 200
+            },
+            {
+                "x": 360,
+                "y": 180,
+                "width": 200,
+                "height": 20
+            },
+            {
+                "x": 580,
+                "y": 300,
+                "width": 200,
+                "height": 20
+            },
+            {
+                "x": 360,
+                "y": 440,
+                "width": 600,
+                "height": 20
+            },
+            {
+                "x": 680,
+                "y": 50,
+                "width": 10,
+                "height": 250
+            },
+            {
+                "x": 800,
+                "y": 180,
+                "width": 150,
+                "height": 20
+            }
+        ],
+        "spikes": [
+            {
+                "x": 370,
+                "y": 410,
+                "width": 80,
+                "height": 30
+            },
+            {
+                "x": 690,
+                "y": 280,
+                "width": 40,
+                "height": 20
+            }
+        ],
+        "fireflies": [],
+        "checkpoints": [
+            {
+                "x": 480,
+                "y": 380,
+                "width": 24,
+                "height": 60
+            }
+        ],
+        "goal": {
+            "x": 870,
+            "y": 100,
+            "width": 55,
+            "height": 80
+        }
     }
 };
