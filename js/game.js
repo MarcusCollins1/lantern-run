@@ -1687,13 +1687,15 @@ function update() {
         return;
     }
 
-    updatePlayer();
-    updateCamera();
-    updateParticles();
-    updateFireflies();
-    updateSpikes();
-    updateCheckpoints();
-    updateGoal();
+    if (gameState === "playing" || gameState === "complete") {
+        updatePlayer();
+        updateCamera();
+        updateParticles();
+        updateFireflies();
+        updateSpikes();
+        updateCheckpoints();
+        updateGoal();
+    }
 }
 
 function draw() {
