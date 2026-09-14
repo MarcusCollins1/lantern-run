@@ -37,3 +37,8 @@ const logoutBtn = document.getElementById("logoutBtn");
 logoutBtn.addEventListener("click", async () => {
     await auth.logout();
 });
+
+const adminBtn = document.getElementById("adminBtn");
+adminBtn.addEventListener("click", () => {
+    location.href = "admin.html";
+});
