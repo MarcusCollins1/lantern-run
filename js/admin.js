@@ -316,7 +316,7 @@ levelCanvas.addEventListener("pointermove", (event) => {
     const position = getCanvasPosition(event);
     mousePosition = position;
     coordinateStatus.textContent = `X: ${Math.round(position.x)} | Y ${Math.round(position.y)}`;
-    handlePointerMove();
+    handlePointerMove(position);
 });
 
 
