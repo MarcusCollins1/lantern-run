@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lantern Run - Level Builder</title>
+
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- ========================================= -->
+    <!-- ACCESS / LOGIN SCREEN                     -->
+    <!-- ========================================= -->
+    <div id="accessScreen" class="access-screen">
+
+        <div class="access-box">
+
+            <h1>Lantern Run</h1>
+
+            <h2>Level Builder</h2>
+
+            <p id="accessMessage">Sign in with an administrator account.</p>
+
+            <form id="adminLoginForm">
+
+                <input
+                    id="adminEmail"
+                    type="email"
+                    placeholder="Email"
+                    autocomplete="username"
+                    required
+                >
+
+                <input
+                    id="adminPassword"
+                    type="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit">Sign In</button>
+
+            </form>
+
+            <button id="returnToGameBtn" type="button" class="secondary-button">Return to Game</button>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================= -->
+    <!-- BUILDER                                   -->
+    <!-- ========================================= -->
+    <main id="builderApp" class="builder-app hidden">
+
+        <!-- TOP BAR -->
+
+        <header class="builder-header">
+
+            <div>
+
+                <h1>Lantern Run Level Builder</h1>
+
+                <p id="adminUserLabel">Administrator</p>
+
+            </div>
+
+            <div class="header-actions">
+
+                <button id="undoBtn" type="button">Undo</button>
+                <button id="redoBtn" type="button">Redo</button>
+                <button id="loadLevelBtn" type="button">Load Level</button>
+                <button id="newLevelBtn" type="button">New Level</button>
+                <button id="exportBtn" type="button" class="primary-button">Export</button>
+                <button id="logoutBtn" type="button">Sign Out</button>
+
+            </div>
+
+        </header>
+
+        <!-- MAIN BUILDER -->
+
+        <section class="builder-layout">
+
+            <!-- ================================= -->
+            <!-- LEFT TOOLBAR                      -->
+            <!-- ================================= -->
+            
+            <aside class="toolbar">
+
+                <h2>Tools</h2>
+
+                <button type="button" class="tool-button active" data-tool="select">Select</button>
+                <button type="button" class="tool-button" data-tool="platform">Platform</button>
+                <button type="button" class="tool-button" data-tool="spike">Spike</button>
+                <button type="button" class="tool-button" data-tool="firefly">Firefly</button>
+                <button type="button" class="tool-button" data-tool="checkpoint">Checkpoint</button>
+                <button type="button" class="tool-button" data-tool="goal">Goal</button>
+                <button type="button" class="tool-button" data-tool="eraser">Eraser</button>
+
+                <hr>
+
+                <h2>Level</h2>
+
+                <label>
+                    Level Number
+                    <input id="levelNumberInput" type="number" min="1" step="1">
+                </label>
+
+                <label>
+                    World width
+                    <input id="worldWidthInput" type="number" min="960" step="50" value="3000">
+                </label>
+
+                <label>
+                    World Height
+                    <input id="worldHeightInput" type="number" min="540" step="10" value="540">
+                </label>
+
+                <hr>
+
+                <div class="instructions">
+
+                    <h2>Controls</h2>
+
+                    <p>
+                        Select:
+                        click and drag objects.
+                    </p>
+
+                    <p>
+                        Platform / Spike:
+                        click and drag to create.
+                    </p>
+
+                    <p>
+                        Firefly:
+                        click to place.
+                    </p>
+
+                    <p>
+                        Checkpoint / Goal:
+                        click to place.
+                    </p>
+
+                    <p>
+                        Delete:
+                        select Eraser or press Delete.
+                    </p>
+
+                </div>
+
+            </aside>
+
+            <!-- ================================= -->
+            <!-- CANVAS AREA                       -->
+            <!-- ================================= -->
+            
+            <section class="editor-area">
+
+                <div class="editor-toolbar">
+
+                    <span id="toolStatus">Select tool</span>
+                    <span id coordinateStatus>X: 0 | Y: 0</span>
+
+                </div>
+
+                <div id="canvasViewport" class="canvas-viewport">
+
+                    <canvas id="levelCanvas" width="3000" height="540"></canvas>
+
+                </div>
+
+            </section>
+
+            <!-- ================================= -->
+            <!-- INSPECTOR -->
+            <!-- ================================= -->
+            
+            <aside class="inspector">
+
+                <h2>Inspector</h2>
+
+                <p id="selectionMessage">Select an object.</p>
+
+                <div id="objectInspector" class="hidden">
+
+                    <label>
+                        Type
+                        <input id="inspectorType" type="text" readonly>
+                    </label>
+
+                    <label>
+                        X
+                        <input id="inspectorX" type="number" step="1">
+                    </label>
+
+                    <label>
+                        Y
+                        <input id="inspectorY" type="number" step="1">
+                    </label>
+
+                    <label id="widthField">
+                        width
+                        <input id="inspectorWidth" type="number" min="1" step="1">
+                    </label>
+
+                    <label id="heightField">
+                        Height
+                        <input id="inspectorHeight" type="number" min="1" step="1">
+                    </label>
+
+                    <button id="deleteSelectedBtn" type="button" class="danger-button">Delete Object</button>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+        <!-- ================================= -->
+        <!-- STATUS BAR -->
+        <!-- ================================= -->
+        
+        <footer class="builder-footer">
+
+            <span id="objectCount">Objects: 0</span>
+            <span id="saveStatus">Ready</span>
+
+        </footer>
+
+    </main>
+
+    <script type="module" src="js/admin.js"></script>
+
+</body>
+</html>

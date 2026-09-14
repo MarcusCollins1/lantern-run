@@ -1,0 +1,406 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    background: radial-gradient(circle at 50% 20%, #243b5a 0%, #101827 45%, #070b12 100%);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+/* ========================================= */
+/* GENERAL                                    */
+/* ========================================= */
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* ========================================= */
+/* ACCESS SCREEN                             */
+/* ========================================= */
+
+.access-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: radial-gradient(circle at 50% 30%, #243b5a 0%, #101827 45%, #070b12 100%);
+    z-index: 1000;
+}
+
+.access-box {
+    width: 380px;
+    max-width: 90vw;
+    padding: 35px;
+    background: rgba(10, 18, 30, 0.96);
+    border: 2px solid #d9b44a;
+    box-shadow: 0 0 30px rgba(255, 213, 92, 0.15);
+    text-align: center;
+}
+.access-box h1 {
+    margin: 0 0 8px;
+    color: #ffe98a;
+    letter-spacing: 4px;
+}
+.access-box h2 {
+    margin: 0 0 15px;
+    font-size: 20px;
+}
+.access-box p {
+    color: #aeb9c8;
+}
+
+#adminLoginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+#adminLoginForm input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #4d5b6b;
+    background: #111c2b;
+    color: #ffffff;
+    outline: none;
+}
+#adminLoginForm input:focus {
+    border-color: #d9b44a;
+}
+#adminLoginForm button,
+.access-box button {
+    padding: 12px;
+    border: 1px solid #d9b44a;
+    background: #34475a;
+    color: #ffffff;
+}
+#adminLoginForm button:hover,
+.access-box button:hover {
+    background: #435a70;
+}
+
+.secondary-button {
+    margin-top: 15px;
+    width: 100%;
+    background: transparent !important;
+    border-color: #55677f !important;
+}
+
+/* ========================================= */
+/* BUILDER                                  */
+/* ========================================= */
+
+.builder-app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ========================================= */
+/* HEADER                                   */
+/* ========================================= */
+
+.builder-header {
+    min-height: 76px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 20px;
+    background: rgba(7, 12, 20, 0.96);
+    border-bottom: 1px solid #34475a;
+}
+.builder-header h1 {
+    margin: 0;
+    color: #ffe98a;
+    font-size: 22px;
+    letter-spacing: 2px;
+}
+
+#adminUserLabel {
+    margin: 4px 0 0;
+    color: #8e9bad;
+    font-size: 13px;
+}
+
+.header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.header-actions button {
+    padding: 8px 12px;
+    border: 1px solid #55677f;
+    background: #182436;
+    color: #ffffff;
+}
+.header-actions button:hover {
+    background: #25364c;
+}
+.header-actions .primary-button {
+    border-color: #d9b44a;
+    background: #34475a;
+}
+.header-actions .primary-button:hover {
+    background: #435a70;
+}
+
+/* ========================================= */
+/* BUILDER LAYOUT                            */
+/* ========================================= */
+
+.builder-layout {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 240px;
+}
+
+
+/* ========================================= */
+/* TOOLBAR                                   */
+/* ========================================= */
+
+.toolbar,
+.inspector {
+    padding: 16px;
+    background: rgba(10, 18, 30, 0.96);
+    overflow-y: auto;
+}
+
+.toolbar {
+    border-right: 1px solid #34475a;
+}
+
+.inspector {
+    border-left: 1px solid #34475a;
+}
+
+.toolbar h2,
+.inspector h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: #ffe98a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.toolbar hr {
+    margin: 18px 0;
+    border: 0;
+    border-top: 1px solid #34475a;
+}
+
+/* ========================================= */
+/* TOOL BUTTONS                              */
+/* ========================================= */
+
+.tool-button {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 7px;
+    border: 1px solid #55677f;
+    background:  #182436;
+    color: #ffffff;
+    text-align: left;
+}
+.tool-button:hover {
+    background: #25364c;
+}
+.tool-button.active {
+    background: #435a70;
+    border-color: #ffe98a;
+    color: #ffffff;
+}
+
+/* ========================================= */
+/* FORM LABELS                               */
+/* ========================================= */
+
+.toolbar label,
+.inspector label {
+    display: block;
+    margin-bottom: 12px;
+    color: #aeb9c8;
+    font-size: 13px;
+}
+.toolbar input,
+.inspector input {
+    width: 100%;
+    display: block;
+    margin-top: 5px;
+    padding: 8px;
+    border: 1px solid #4d5b6b;
+    background: #111c2b;
+    color: #ffffff;
+}
+.toolbar input:focus,
+.inspector input:focus {
+    outline: none;
+    border-color: #d9b44a;
+}
+
+/* ========================================= */
+/* INSTRUCTIONS                             */
+/* ========================================= */
+
+.instructions p {
+    color: #8e9bad;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ========================================= */
+/* EDITOR AREA                               */
+/* ========================================= */
+
+.editor-area {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #070b12;
+}
+
+
+/* ========================================= */
+/* EDITOR TOOLBAR                            */
+/* ========================================= */
+
+.editor-toolbar {
+    height: 42px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    background: #101827;
+    border-bottom: 1px solid #34475a;
+    color: #aeb9c8;
+    font-size: 13px;
+}
+
+/* ========================================= */
+/* CANVAS                                    */
+/* ========================================= */
+
+.canvas-viewport {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 30px;
+    background: #05080d;
+}
+
+#levelCanvas {
+    display: block;
+    width: 3000px;
+    height: 540px;
+    background: #0c1420;
+    border: 2px solid #55677f;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================= */
+/* INSPECTOR                                */
+/* ========================================= */
+
+#selectionMessage {
+    color: #8e9bad;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+#inspectorType {
+    color: #aeb9c8;
+}
+
+
+/* ========================================= */
+/* DANGER BUTTON                             */
+/* ========================================= */
+
+.danger-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #a64d4d;
+    background: #542b2b;
+    color: #ffffff;
+}
+.danger-button:hover {
+    background: #6c3535;
+}
+
+
+/* ========================================= */
+/* FOOTER                                    */
+/* ========================================= */
+
+.builder-footer {
+    height: 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    background: #101827;
+    border-top: 1px solid #34475a;
+    color: #8e9bad;
+    font-size: 12px;
+}
+
+
+/* ========================================= */
+/* RESPONSIVE                                */
+/* ========================================= */
+
+@media (max-width: 900px) {
+
+    .builder-layout {
+        grid-template-columns: 170px minmax(0, 1fr) 200px;
+    }
+
+    .builder-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
+
+@media (max-width: 700px) {
+    .builder-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar,
+    .inspector {
+        border: 0;
+        border-bottom: 1px solid #34475a;
+    }
+
+    .editor-area {
+        min-height: 500px;
+    }
+    
+}
