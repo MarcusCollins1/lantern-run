@@ -1336,6 +1336,7 @@ function drawLevelButtonContent(button) {
     const levelNumber = button.data.levelNumber;
     const unlocked = button.data.unlocked;
     const stars = button.data.stars;
+    const time = button.data.time;
     const centerX = button.x + button.width / 2;
     ctx.textAlign = "center";
 
@@ -1364,6 +1365,13 @@ function drawLevelButtonContent(button) {
         ctx.fillStyle = "#ffffff";
         ctx.font = "16px Arial";
         ctx.fillText("⭐".repeat(stars), centerX, button.y + 120);
+    }
+
+    // Time
+    if (time > 0) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px Arial";
+        ctx.fillText(`${time.toFixed(2)}s`, centerX, button.y + 150);
     }
     
     ctx.textAlign = "left";
@@ -1603,7 +1611,7 @@ function getButtonsForState() {
 
         // Level Numbers Buttons
         const buttonWidth = 180;
-        const buttonHeight = 145;
+        const buttonHeight = 175;
         const gap = 25;
 
         const levelNumbers = Object.keys(levels).map(Number).sort((a, b) => a-b);
@@ -1627,6 +1635,7 @@ function getButtonsForState() {
             const unlocked = levelNumber <= highestUnlockedLevel;
             const result = levelResults[levelNumber];
             const stars = result ? getLevelStars(result) : 0;
+            const time = result ? result.time : 0;
 
             return createButton(
                 `level-${levelNumber}`,
@@ -1641,7 +1650,8 @@ function getButtonsForState() {
                 {
                     levelNumber,
                     unlocked,
-                    stars
+                    stars,
+                    time
                 }
             );
         });
