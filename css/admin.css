@@ -315,7 +315,7 @@ button {
 
 #levelCanvas {
     display: block;
-    width: 3000px;
+    width: 960px;
     height: 540px;
     background: #0c1420;
     border: 2px solid #55677f;
@@ -402,5 +402,5 @@ button {
     .editor-area {
         min-height: 500px;
     }
-    
+
 }

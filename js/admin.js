@@ -58,7 +58,8 @@ const TOOLS = {
     FIREFLY: "firefly",
     CHECKPOINT: "checkpoint",
     GOAL: "goal",
-    ERASER: "eraser"
+    ERASER: "eraser",
+    PAN: "pan"
 };
 
 let currentTool = TOOLS.SELECT;
@@ -71,6 +72,21 @@ let mousePosition = {
     x: 0,
     y: 0
 };
+let isPanning = false;
+let panStartX = 0;
+let panStartCameraX = 0;
+
+// ==================================================
+// CAMERA
+// ==================================================
+
+let cameraX = 0;
+
+function clampCameraX(x) {
+    const maxCameraX = Math.max(0, getWorldWidth() - 960);
+    
+    return clamp(x, 0, maxCameraX);
+}
 
 // ==================================================
 // HISTORY
@@ -225,7 +241,7 @@ function setTool(tool) {
 
     toolStatus.textContent = toolNames[tool] || "Select tool";
 
-    levelCanvas.style.cursor = tool === TOOLS.SELECT ? "default" : "crosshair";
+    updateCanvasCursor();
 }
 
 // ==================================================
@@ -233,15 +249,52 @@ function setTool(tool) {
 // ==================================================
 
 function resizeCanvas() {
-    const width = Math.max(960, Number(worldWidthInput.value) || 3000);
-    const height = Math.max(540, Number(worldHeightInput.value) || 540);
+    levelCanvas.width = 960;
+    levelCanvas.height = 540;
 
-    levelCanvas.width = width;
-    levelCanvas.height = height;
-    levelCanvas.style.widows = `${width}px`;
-    levelCanvas.style.height = `${height}px`;
+    levelCanvas.style.width = "960px";
+    levelCanvas.style.height = "540px";
+
+    cameraX = clampCameraX(cameraX);
 
     render();
+}
+
+function getWorldWidth() {
+    return Math.max(960, Number(worldWidthInput.value) || 3000);
+}
+
+function updateCanvasCursor() {
+    if (isPanning) {
+        levelCanvas.style.cursor = "grabbing";
+        return;
+    }
+
+    switch(currentTool) {
+        case TOOLS.PAN:
+            levelCanvas.style.cursor = "grab";
+            break;
+
+        case TOOLS.SELECT:
+            levelCanvas.style.cursor = "default";
+            break;
+        
+        case TOOLS.ERASER:
+            levelCanvas.style.cursor = "not-allowed";
+            break;
+        
+        default:
+            levelCanvas.style.cursor = "crosshair";
+            break;
+    }
+}
+
+function startPanning(event) {
+    isPanning = true;
+    panStartX = event.clientX;
+    panStartCameraX = cameraX;
+    levelCanvas.setPointerCapture(event.pointerId);
+    updateCanvasCursor();
 }
 
 worldWidthInput.addEventListener("change", () => {
@@ -276,9 +329,12 @@ function getCanvasPosition(event) {
     const scaleX = levelCanvas.width / rect.width;
     const scaleY = levelCanvas.height / rect.height;
 
+    const screenX = (event.clientX - rect.left) * scaleX;
+    const screenY = (event.clientY - rect.top) * scaleY;
+
     return {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY
+        x: screenX + cameraX,
+        y: screenY
     };
 }
 
@@ -298,13 +354,25 @@ levelCanvas.addEventListener("mousemove", (event) => {
 // ==================================================
 
 levelCanvas.addEventListener("pointerdown", (event) => {
-    if(event.button !== 0) {
+    if (event.button === 0) {
+
+        if (currentTool === TOOLS.PAN) {
+            startPanning(event);
+            return;
+        }
+
+        const position = getCanvasPosition(event);
+        levelCanvas.setPointerCapture(event.pointerId);
+        handlePointerDown(position);
         return;
     }
 
-    const position = getCanvasPosition(event);
-    levelCanvas.setPointerCapture(event.pointerId);
-    handlePointerDown(position);
+    if (event.button === 1) {
+        startPanning(event);
+
+        return;
+    }
+
 });
 
 
@@ -313,6 +381,15 @@ levelCanvas.addEventListener("pointerdown", (event) => {
 // ==================================================
 
 levelCanvas.addEventListener("pointermove", (event) => {
+
+    if (isPanning) {
+        const movement = event.clientX - panStartX;
+        cameraX = clampCameraX(panStartCameraX - movement);
+
+        render();
+        return;
+    }
+
     const position = getCanvasPosition(event);
     mousePosition = position;
     coordinateStatus.textContent = `X: ${Math.round(position.x)} | Y ${Math.round(position.y)}`;
@@ -325,11 +402,41 @@ levelCanvas.addEventListener("pointermove", (event) => {
 // ==================================================
 
 levelCanvas.addEventListener("pointerup", (event) => {
-    const position = getCanvasPosition(event);
+
+    if (isPanning && (event.button === 0 || event.button === 1)) {
+        isPanning = false;
+        if (levelCanvas.hasPointerCapture(event.pointerId)) {
+            levelCanvas.releasePointerCapture(event.pointerId);
+        }
+        updateCanvasCursor();
+        render();
+        return;
+    }
+
+    if (event.button === 0) {
+        const position = getCanvasPosition(event);
+        if (levelCanvas.hasPointerCapture(event.pointerId)) {
+            levelCanvas.releasePointerCapture(event.pointerId);
+        }
+        handlePointerUp(position);
+        updateCanvasCursor();
+        render();
+        return;
+    }
+});
+
+
+// ==================================================
+// POINTER CANCEL
+// ==================================================
+
+levelCanvas.addEventListener("pointercancel", (event) => {
+    isPanning = false;
     if (levelCanvas.hasPointerCapture(event.pointerId)) {
         levelCanvas.releasePointerCapture(event.pointerId);
     }
-    handlePointerUp(position);
+
+    updateCanvasCursor();
     render();
 });
 
@@ -454,6 +561,7 @@ function handlePointerUp(position) {
                 if (currentTool === TOOLS.PLATFORM) {
                     currentLevel.platforms.push(rectangle);
                 } else {
+                    rectangle.width = Math.ceil(rectangle.width / 20) * 20;
                     currentLevel.spikes.push(rectangle);
                 }
 
@@ -859,6 +967,7 @@ loadLevelBtn.addEventListener("click", () => {
     resizeCanvas();
 
     selectedObject = null;
+    cameraX = 0;
 
     updateInspector();
     resetHistory();
@@ -901,6 +1010,7 @@ newLevelBtn.addEventListener("click", () => {
 
     currentLevel = createEmptyLevel();
     selectedObject = null;
+    cameraX = 0;
     
     levelNumberInput.value = getNextLevelNumber();
     worldWidthInput.value = 3000;
@@ -1151,11 +1261,13 @@ function drawGrid() {
 
 function drawPlatforms() {
     for (const platform of currentLevel.platforms) {
+        
+        const screenX = platform.x - cameraX;
 
         ctx.fillStyle = "#3d2c24";
 
         ctx.fillRect(
-            platform.x,
+            screenX,
             platform.y,
             platform.width,
             platform.height
@@ -1165,7 +1277,7 @@ function drawPlatforms() {
         ctx.fillStyle ="#435c3a";
 
         ctx.fillRect(
-            platform.x,
+            screenX,
             platform.y,
             platform.width,
             Math.min(12, platform.height)
@@ -1181,13 +1293,15 @@ function drawPlatforms() {
 function drawSpikes() {
     for (const spikeArea of currentLevel.spikes) {
 
+        const startX = spikeArea.x - cameraX;
+
         const spikeWidth =20;
 
         const spikeCount = Math.ceil(spikeArea.width / spikeWidth);
 
         for (let i = 0; i < spikeCount; i++) {
             
-            const x = spikeArea.x + i * spikeWidth;
+            const x = startX + i * spikeWidth;
             const bottom = spikeArea.y + spikeArea.height;
 
             ctx.beginPath();
@@ -1219,11 +1333,13 @@ function drawSpikes() {
 function drawFireflies() {
     for (const firefly of currentLevel.fireflies) {
 
+        const x = firefly.x - cameraX;
+
         const glow = ctx.createRadialGradient(
-                firefly.x,
+                x,
                 firefly.y,
                 2,
-                firefly.x,
+                x,
                 firefly.y,
                 25
             );
@@ -1236,7 +1352,7 @@ function drawFireflies() {
         ctx.beginPath();
 
         ctx.arc(
-            firefly.x,
+            x,
             firefly.y,
             25,
             0,
@@ -1251,7 +1367,7 @@ function drawFireflies() {
         ctx.beginPath();
 
         ctx.arc(
-            firefly.x,
+            x,
             firefly.y,
             5,
             0,
@@ -1270,10 +1386,12 @@ function drawFireflies() {
 function drawCheckpoints() {
     for (const checkpoint of currentLevel.checkpoints) {
 
+        const x = checkpoint.x - cameraX;
+
         ctx.fillStyle = "#5b4635";
 
         ctx.fillRect(
-            checkpoint.x + 9,
+            x + 9,
             checkpoint.y + 15,
             6,
             45
@@ -1282,7 +1400,7 @@ function drawCheckpoints() {
         ctx.fillStyle = "#fff19b";
 
         ctx.fillRect(
-            checkpoint.x + 3,
+            x + 3,
             checkpoint.y,
             18,
             22
@@ -1298,10 +1416,12 @@ function drawCheckpoints() {
 function drawGoal() {
     const goal = currentLevel.goal;
 
+    const x = goal.x - cameraX;
+
     ctx.fillStyle = "rgba(180, 210, 255, 0.12)";
 
     ctx.fillRect(
-        goal.x - 20,
+        x - 20,
         goal.y - 20,
         goal.width + 40,
         goal.height + 40
@@ -1311,7 +1431,7 @@ function drawGoal() {
     ctx.fillStyle = "#55677f";
 
     ctx.fillRect(
-        goal.x,
+        x,
         goal.y,
         goal.width,
         goal.height
@@ -1321,7 +1441,7 @@ function drawGoal() {
     ctx.fillStyle = "#101a2b";
 
     ctx.fillRect(
-        goal.x + 8,
+        x + 8,
         goal.y + 9,
         goal.width - 16,
         goal.height - 9
@@ -1334,7 +1454,7 @@ function drawGoal() {
 
     ctx.fillText(
         "✦",
-        goal.x + 16,
+        x + 16,
         goal.y + 45
     );
 }
@@ -1362,7 +1482,7 @@ function drawSelection(selected) {
         ctx.beginPath();
 
         ctx.arc(
-            object.x,
+            object.x - cameraX,
             object.y,
             12,
             0,
@@ -1372,9 +1492,8 @@ function drawSelection(selected) {
         ctx.stroke();
 
     } else {
-
         ctx.strokeRect(
-            object.x - 3,
+            object.x - cameraX - 3,
             object.y - 3,
             object.width + 6,
             object.height + 6
