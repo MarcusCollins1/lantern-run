@@ -53,7 +53,7 @@ let gameState = "title";
 let highestUnlockedLevel = 1;
 const levelResults = {};
 const buttons = [];
-let mousePosition = { x: 0, y: 0 };
+const mousePosition = { x: 0, y: 0 };
 let buttonsState = null;
 
 // --------------------------------------------------
@@ -1606,32 +1606,29 @@ function getButtonsForState() {
             const column = index % columns;
             const row = Math.floor(index / columns);
 
-            const x = startX + column * (buttonHeight + gap);
-            const y = startY + row * (buttonWidth + gap);
+            const x = startX + column * (buttonWidth + gap);
+            const y = startY + row * (buttonHeight + gap);
 
             const unlocked = levelNumber <= highestUnlockedLevel;
             const result = levelResults[levelNumber];
             const stars = result ? getLevelStars(result) : 0;
 
-            return createButton({
-                id: `level-${levelNumber}`,
+            return createButton(
+                `level-${levelNumber}`,
                 x,
                 y,
-
-                width: buttonWidth,
-                height: buttonHeight,
-                text: `LEVEL ${levelNumber}`,
-                disabled: !unlocked,
-                style: "level",
-                data: {
+                buttonWidth,
+                buttonHeight,
+                `LEVEL ${levelNumber}`,
+                () => {loadLevel(levelNumber);},
+                !unlocked,
+                "level",
+                {
                     levelNumber,
                     unlocked,
                     stars
-                },
-                onClick() {
-                    loadLevel(levelNumber);
                 }
-            });
+            );
         });
     }
     
@@ -1663,18 +1660,9 @@ function getButtonsForState() {
 
     if (gameState === "complete") {
         return [
-            createButton({
-                id: "complete-level-select",
-                x: WIDTH / 2 - 110,
-                y: 390,
-                width: 220,
-                height: 50,
-                text: "LEVEL SELECT",
-                style: "large",
-                onClick() {
-                    gameState = "levelSelect";
-                }
-            })
+            createButton(
+                "complete-level-select", WIDTH / 2 - 110, 390, 220, 50, "LEVEL SELECT", () => {gameState = "levelSelect";}, false, "large"
+            )
         ];
     }
 
@@ -1716,15 +1704,15 @@ function draw() {
         HEIGHT
     );
 
-    drawGameButtons();
-
     if (gameState === "title") {
         drawTitleScreen();
+        drawGameButtons();
         return;
     }
 
     if (gameState === "levelSelect") {
         drawLevelSelect();
+        drawGameButtons();
         return;
     }
 
@@ -1763,6 +1751,7 @@ function draw() {
         drawParticles();
 
         drawLevelComplete();
+        drawGameButtons();
 
         return;
     }
