@@ -7,6 +7,7 @@ import {
 import { auth } from "./firebase.js";
 
 let isSignUpMode = false;
+let explicitlyCreatingAccount = false;
 
 function authErrorMessage(error) {
     switch (error.code) {
@@ -43,8 +44,10 @@ export function setupAuth({ onSignedIn, onSignedOut }) {
 
         try {
             if (isSignUpMode) {
+                explicitlyCreatingAccount = true;
                 await createUserWithEmailAndPassword(auth, email, password);
             } else {
+                explicitlyCreatingAccount = false;
                 await signInWithEmailAndPassword(auth, email, password);
             }
 
@@ -74,13 +77,36 @@ export function setupAuth({ onSignedIn, onSignedOut }) {
     });
 
     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            authScreen.style.display = "none";
-            await onSignedIn(user);
-        } else {
+        if (!user) {
             authScreen.style.display = "flex";
             onSignedOut();
+            return;
         }
+
+        const creatingAccount = explicitlyCreatingAccount;
+
+        // Consume the flag so future auth-state events
+        // aren't treated as account creation.
+        explicitlyCreatingAccount = false;
+
+        const validGameAccount = await onSignedIn(user, {
+            creatingAccount
+        });
+
+        if (validGameAccount) {
+            authScreen.style.display = "none";
+            authMessage.textContent = "";
+            return;
+        }
+
+        // Firebase session belongs to another game/account.
+        // Do not allow it into Lantern Run.
+        await signOut(auth);
+
+        authScreen.style.display = "flex";
+        authMessage.textContent =
+            "This Firebase account does not have a Lantern Run account. " +
+            "Sign in with a Lantern Run account or choose Create Account.";
     });
 
     return {

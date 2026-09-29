@@ -3,15 +3,8 @@ import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.18.0/
 
 const COLLECTION = "lantern-run-users";
 
-export async function loadPlayerData(uid) {
-    const playerRef = doc(db, COLLECTION, uid);
-    const snapshot = await getDoc(playerRef);
-
-    if (snapshot.exists()) {
-        return snapshot.data();
-    }
-
-    const startingData = {
+function getStartingData() {
+    return {
         highestUnlockedLevel: 1,
         coins: 0,
         totalFireflies: 0,
@@ -22,8 +15,31 @@ export async function loadPlayerData(uid) {
             lantern: 1
         }
     };
+}
+
+export async function loadPlayerData(uid) {
+    const playerRef = doc(db, COLLECTION, uid);
+    const snapshot = await getDoc(playerRef);
+
+    if (!snapshot.exists()) {
+        return null;
+    }
+    
+    return snapshot.data();
+}
+
+export async function createPlayerData(uid) {
+    const playerRef = doc(db, COLLECTION, uid);
+    const snapshot = await getDoc(playerRef);
+
+    if (snapshot.exists()) {
+        return snapshot.data();
+    }
+
+    const startingData = getStartingData();
 
     await setDoc(playerRef, startingData);
+
     return startingData;
 }
 

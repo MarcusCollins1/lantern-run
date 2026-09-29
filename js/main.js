@@ -1,5 +1,5 @@
 import { setupAuth } from "./auth.js";
-import { loadPlayerData, saveLevelResult } from "./player-data.js";
+import { loadPlayerData, createPlayerData, saveLevelResult } from "./player-data.js";
 import { applyPlayerData, setSaveHandler, startGame } from "./game.js";
 
 setSaveHandler(async ({ highestUnlockedLevel, levelNumber, levelResult }) => {
@@ -14,14 +14,30 @@ setSaveHandler(async ({ highestUnlockedLevel, levelNumber, levelResult }) => {
 });
 
 const auth = setupAuth({
-    onSignedIn: async (user) => {
-        window.__lanternRunUser = user;
-
+    onSignedIn: async (user, { creatingAccount = false } = {}) => {
         try {
-            const data = await loadPlayerData(user.uid);
+            let data;
+
+            if (creatingAccount) {
+                data = await createPlayerData(user.uid);
+            } else {
+                data = await loadPlayerData(user.uid);
+
+                // Firebase knows this user, but Lantern Run doesn't.
+                if (!data) {
+                    window.__lanternRunUser = null;
+                    return false;
+                }
+            }
+
+            window.__lanternRunUser = user;
             applyPlayerData(data);
+
+            return true;
         } catch (error) {
             console.error("Could not load player data:", error);
+            window.__lanternRunUser = null;
+            return false;
         }
     },
 
